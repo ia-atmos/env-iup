@@ -5,7 +5,7 @@ Kept current as items open and close.
 
 ## A. Decisions waiting for the author
 
-- Repository name: keep `iup` or rename to `env-iup` (undecided).
+- (none)
 
 ## B. Work known and not done
 
@@ -23,6 +23,7 @@ Kept current as items open and close.
 
 ## Context
 
+- Repository: `ia-atmos/env-iup` (formerly `fsantanna/iup`).
 - Subject: an environment for graphical user interfaces in Atmos over the IUP
   library (Tecgraf/PUC-Rio), as a direct binding to its C API.
 - Related: `lua-atmos/env-iup` (same idea for the Lua runtime, over iup-lua).
