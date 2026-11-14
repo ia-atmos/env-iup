@@ -14,19 +14,26 @@ Kept current as items open and close.
 
 ## B. Work known and not done
 
-- I1: the environment `iup.atm`, thin and generic (confirmed).
-  Before it: read `doc/manual.md` of the compiler.
-- `atmos-iup`: the build makes the dedicated compiler (`make env` of
-  `ia-atmos/lang`); the runner of the tests, the examples, and the
-  documents use it. With I1, when `iup.atm` exists.
-- I2 to I6: see `261113-env-iup.md`.
-- The Mac: verify whether IUP has a driver, and say so in the readme.
+- I2 to I5 wait for the answer of the author on what to build (A).
+- The callbacks with arguments (the mouse on a canvas, the keys, the
+  item of a list): today only `ACTION`, `VALUECHANGED_CB`, and
+  `CLOSE_CB` become events, with the handle alone.
+- A modal dialog (`IupPopup`): not bound. The events are queued, so a
+  nested loop of IUP would hold them until it returns.
+- The screenshots are saved and not compared: decide where the pixels
+  are stable.
+- The Mac: IUP 3.32 distributes binaries for Linux and Windows only;
+  the readme says Linux on x86-64. Windows is not tried.
 - `www.tecgraf.puc-rio.br` is not reachable from the container (the
   documents of IUP): SourceForge is.
+- `doc/api.md`, `doc/guide.md` (I5).
 
 ## C. Reported and not acknowledged
 
-- (none)
+- To the compiler session (2026-11-14): a pinned value cannot be in the
+  pattern of an await (`pin dlg` then `watching :close [h=dlg]` is
+  "invalid escape : pinned value"), and a pattern kept in a variable
+  is not accepted. Workaround here: the dialog is a `val`.
 
 ## D. Older items
 
