@@ -1,0 +1,5 @@
+100:set:txt:VALUE=hello
+200:click:but
+300:close:dlg
+400:close:dlg
+2000:quit

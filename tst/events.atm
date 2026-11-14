@@ -1,0 +1,32 @@
+;; The events, and what a callback returns.
+
+val txt = iup.new(:text,   [handlename="txt"])
+val but = iup.new(:button, [title="b", handlename="but"])
+val dlg = iup.new(:dialog, [handlename="dlg", iup.new(:hbox, [txt, but])])
+iup.show(dlg)
+
+;; a value set by the user
+val e1 = await :value
+print(e1.tag, e1.h == txt, iup.get(txt, "VALUE"))
+
+;; the events carry the handle the program holds
+par :any {
+    await :action [h=txt]
+    print("wrong")
+} with {
+    await :action [h=but]
+    print("action")
+}
+
+;; a close that is refused, and one that is not
+iup.set(dlg, "ATM_CLOSE_CB", "IGNORE")
+await :close [h=dlg]
+print("close 1", iup.get(dlg, "VISIBLE"))
+iup.set(dlg, "ATM_CLOSE_CB", nil)
+await :close [h=dlg]
+print("close 2", iup.get(dlg, "VISIBLE"))
+
+;; the time is that of the script
+await 1s
+print("1s")
+await false

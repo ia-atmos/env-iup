@@ -1,0 +1,6 @@
+value	true	hello
+action
+close 1	YES
+close 2	NO
+1s
+exit 0
