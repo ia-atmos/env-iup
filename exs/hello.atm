@@ -1,0 +1,8 @@
+;; Prints a message every 500ms, for 5 seconds. Only the time: no dialog.
+
+watching 5s {
+    loop on 500ms {
+        print("Hello World!")
+    }
+}
+print("done")
