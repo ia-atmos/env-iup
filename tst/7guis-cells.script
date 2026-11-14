@@ -1,0 +1,34 @@
+# two numbers and their sum
+100:click:A0
+110:set:A0:VALUE=10
+200:click:A1
+210:set:A1:VALUE=20
+300:click:B0
+310:set:B0:VALUE==sum(A0:A1)
+400:click:B1
+410:set:B1:VALUE==mul(B0, add(A0, 2))
+500:click:C0
+510:get:A0:VALUE
+510:get:A1:VALUE
+510:get:B0:VALUE
+510:get:B1:VALUE
+# a change propagates
+600:click:A0
+610:get:A0:VALUE
+620:set:A0:VALUE=1
+700:click:C0
+710:get:B0:VALUE
+710:get:B1:VALUE
+# the formula comes back with the focus
+800:click:B0
+810:get:B0:VALUE
+# a text, and a formula that is not well formed
+820:set:B0:VALUE=hello
+900:click:C1
+910:set:C1:VALUE==sum(A0
+1000:click:C0
+1010:get:B0:VALUE
+1010:get:B1:VALUE
+1010:get:C1:VALUE
+1100:shot:out/7guis-cells.png
+1200:close:dlg

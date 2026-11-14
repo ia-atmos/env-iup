@@ -1,0 +1,202 @@
+;; 7GUIs, task 7: Cells.
+;; A spreadsheet with the columns A to Z and the rows 0 to 99. A cell
+;; holds a number, a text, or a formula that starts with `=`: a number,
+;; a cell (`B3`), or a function over numbers, cells, and ranges
+;; (`=sum(A0:A9)`, `=div(B1, add(A0, 2))`). The cell with the focus shows
+;; its formula, and the others show their values. A change propagates to
+;; the cells that depend on it.
+;;
+;; Each formula is a task: it computes its value, tells that it changed,
+;; and awaits a change in a cell that it reads.
+
+val srcs = []           ;; id -> what the user typed
+val vals = []           ;; id -> the value: a number, a text, or nil
+val hs   = []           ;; id -> the control
+var focus = nil         ;; the id of the cell with the focus
+
+;; The functions of the formulas, over a vector of numbers.
+val funcs = [
+    sum  = func (ns) { var r = 0 ; loop _,n in ns { set r = r + n } ; r },
+    prod = func (ns) { var r = 1 ; loop _,n in ns { set r = r * n } ; r },
+    add  = func (ns) { ns@0 + ns@1 },
+    sub  = func (ns) { ns@0 - ns@1 },
+    mul  = func (ns) { ns@0 * ns@1 },
+    div  = func (ns) { ns@0 / ns@1 },
+]
+
+;; Evaluates a formula: its value and the set of the cells that it reads.
+;; Throws `:Formula` if it is not well formed.
+func eval (src) {
+    var pos = 0
+    val deps = []
+
+    val func peek () {
+        loop {
+            while string.sub(src, pos, pos) == " "
+            set pos = pos + 1
+        }
+        if pos < #src => string.sub(src, pos, pos) => ""
+    }
+
+    ;; The longest prefix with the given characters.
+    val func word (chars) {
+        val ini = pos
+        loop {
+            while (pos < #src) && (string.find(chars, string.sub(src, pos, pos)) != nil)
+            set pos = pos + 1
+        }
+        string.sub(src, ini, pos-1)
+    }
+
+    ;; The number in a cell: an empty one is 0, and a text is an error.
+    val func cell (id) {
+        set deps@id = true
+        val v = vals@id
+        if (v != nil) && (type(v) != "number") {
+            throw :Formula
+        }
+        v || 0
+    }
+
+    ;; A cell, as its column and row.
+    val func ref () {
+        peek()
+        val col = string.byte(word("ABCDEFGHIJKLMNOPQRSTUVWXYZ")) - 65
+        val row = tonumber(word("0123456789"))
+        if (row == nil) || (row > 99) {
+            throw :Formula
+        }
+        return col, row
+    }
+
+    ;; An expression, as a vector of numbers.
+    val func expr () {
+        val c = peek()
+        if string.find("0123456789.-", c) != nil && (c != "") {
+            set pos = pos + 1
+            val n = tonumber(c ++ word("0123456789."))
+            if n == nil {
+                throw :Formula
+            }
+            return [n]
+        }
+        if string.find("ABCDEFGHIJKLMNOPQRSTUVWXYZ", c) != nil && (c != "") {
+            val c1, r1 = ref()
+            if peek() != ":" {
+                return [cell(string.char(65+c1) ++ r1)]
+            }
+            set pos = pos + 1
+            val c2, r2 = ref()
+            val ns = []
+            loop c in (c1, c2) {
+                loop r in (r1, r2) {
+                    vector.insert(ns, cell(string.char(65+c) ++ r))
+                }
+            }
+            return ns
+        }
+        val f = funcs@(word("abcdefghijklmnopqrstuvwxyz"))
+        if (f == nil) || (peek() != "(") {
+            throw :Formula
+        }
+        val ns = []
+        loop {
+            set pos = pos + 1               ;; the `(` or the `,`
+            loop _,n in expr() {
+                vector.insert(ns, n)
+            }
+            until peek() != ","
+        }
+        if (peek() != ")") || (#ns < 2) {
+            throw :Formula
+        }
+        set pos = pos + 1
+        [f(ns)]
+    }
+
+    val ok, ns = catch :Formula {
+        val ns = expr()
+        if (#ns != 1) || (peek() != "") {
+            throw :Formula
+        }
+        ns
+    }
+    return (if ok => ns@0 => "#ERR"), deps
+}
+
+;; Shows the value of a cell, unless the user is editing it.
+func show (id) {
+    if id != focus {
+        val v = vals@id
+        iup.set(hs@id, "VALUE", if type(v) == "number" => string.format("%g", v) => (v || ""))
+    }
+}
+
+;; A cell with a formula.
+task Formula (id, src) {
+    loop {
+        val v, deps = eval(src)
+        set vals@id = v
+        show(id)
+        emit @:global :cell [id=id]
+        await :cell until deps@(it.id)
+    }
+}
+
+val kids = [iup.new(:label, [title=""])]
+loop c in 26 {
+    vector.insert(kids, iup.new(:label, [title=string.char(65+c)]))
+}
+loop r in 100 {
+    vector.insert(kids, iup.new(:label, [title=r]))
+    loop c in 26 {
+        val id = string.char(65+c) ++ r
+        set hs@id = iup.new(:text, [size=40, cell=id, handlename=id])
+        vector.insert(kids, hs@id)
+    }
+}
+set kids.numdiv    = 27
+set kids.sizelin   = 1
+set kids.sizecol   = 1
+set kids.alignmentcol = "ACENTER"
+val dlg = iup.new(:dialog, [
+    title      = "Cells",
+    rastersize = "620x400",
+    handlename = "dlg",
+    iup.new(:scrollbox, [iup.new(:gridbox, kids)]),
+])
+iup.show(dlg)
+
+pin ts  = tasks()       ;; the formulas
+pin run = []            ;; id -> the task of its formula
+
+watching :close [h=dlg] {
+    loop e on :focus {
+        val id = iup.get(e.h, "CELL")
+        if id == nil {
+            ;; not a cell
+        } else {
+            if e.focus {
+                set focus = id
+                iup.set(e.h, "VALUE", srcs@id || "")
+            } else {
+                set focus = nil
+                val src = iup.get(e.h, "VALUE") || ""
+                if src != (srcs@id || "") {
+                    set srcs@id = src
+                    if run@id != nil {
+                        abort run@id
+                        set run@id = nil
+                    }
+                    if string.sub(src, 0, 0) == "=" {
+                        set run@id = spawn @ts Formula(id, string.sub(src, 1))
+                    } else {
+                        set vals@id = tonumber(src) || (if src == "" => nil => src)
+                        emit :cell [id=id]
+                    }
+                }
+                show(id)
+            }
+        }
+    }
+}
