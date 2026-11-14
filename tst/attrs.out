@@ -1,0 +1,22 @@
+native	one	one
+10
+1.5
+NO
+YES
+nil
+x
+nil
+VERTICAL
+false	invalid class : nothing
+false	invalid class : expected string
+false	invalid attributes : expected table
+false	invalid child : expected handle
+false	invalid child : label is not a container
+false	invalid value : attribute TITLE
+false	invalid handle
+false	invalid attribute : expected string
+false	invalid handle
+false	invalid handle
+false	invalid child : it has a parent
+ok
+exit 0

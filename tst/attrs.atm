@@ -1,0 +1,41 @@
+;; The attributes, the conversions of their values, and the errors.
+
+val lbl = iup.new(:label, [title="one"])
+print(type(lbl), iup.get(lbl, "TITLE"), iup.get(lbl, "title"))
+
+iup.set(lbl, "title", 10)
+print(iup.get(lbl, "TITLE"))
+iup.set(lbl, "TITLE", 1.5)
+print(iup.get(lbl, "TITLE"))
+iup.set(lbl, "ACTIVE", false)
+print(iup.get(lbl, "ACTIVE"))
+iup.set(lbl, "ACTIVE", true)
+print(iup.get(lbl, "ACTIVE"))
+
+;; an attribute of the program
+print(iup.get(lbl, "MINE"))
+iup.set(lbl, "MINE", "x")
+print(iup.get(lbl, "MINE"))
+iup.set(lbl, "MINE", nil)
+print(iup.get(lbl, "MINE"))
+
+;; no attributes
+val box = iup.new(:vbox)
+print(iup.get(box, "ORIENTATION"))
+
+;; errors
+print(catch true { iup.new(:nothing, []) })
+print(catch true { iup.new(10, []) })
+print(catch true { iup.new(:label, 10) })
+print(catch true { iup.new(:vbox, [10]) })
+print(catch true { iup.new(:label, [lbl]) })
+print(catch true { iup.new(:label, [title=[]]) })
+print(catch true { iup.set(10, "TITLE", "x") })
+print(catch true { iup.set(lbl, 10, "x") })
+print(catch true { iup.get(nil, "TITLE") })
+print(catch true { iup.show(nil) })
+
+;; a control has a single parent
+val dlg = iup.new(:dialog, [iup.new(:vbox, [lbl])])
+print(catch true { iup.new(:vbox, [lbl]) })
+print("ok")
