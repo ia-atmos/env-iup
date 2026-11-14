@@ -26,8 +26,25 @@ watching :close [h=dlg] {
 
 ![The counter after three presses](doc/button-counter.png)
 
-Status: experimental. The environment (`iup.atm`) and two examples
-exist; the plan is in `.claude/plans/261113-env-iup.md`.
+Status: experimental. The plan is in
+`.claude/plans/261113-env-iup.md`.
+
+## Examples
+
+| | |
+|-|-|
+| `exs/hello.atm` | Only the time: a message every 500ms, for 5 seconds |
+| `exs/button-counter.atm` | The program above |
+| `exs/7guis/counter.atm` | [7GUIs][7guis], task 1 |
+| `exs/7guis/temperature.atm` | Task 2: two fields that convert to each other |
+| `exs/7guis/flight.atm` | Task 3: constraints between a choice, two dates, and a button |
+| `exs/7guis/timer.atm` | Task 4: the time, a slider, and a reset, concurrently |
+| `exs/7guis/crud.atm` | Task 5: a filtered list with create, update, and delete |
+| `exs/7guis/circles.atm` | Task 6: a canvas, undo and redo, a menu, and a dialog that holds the main one |
+| `exs/7guis/cells.atm` | Task 7: a spreadsheet, in which each formula is a task that awaits the cells it reads |
+
+![The circle drawer](doc/7guis-circles.png)
+![The cells](doc/7guis-cells.png)
 
 ## Build
 
@@ -62,19 +79,32 @@ header of `iup.atm` describes it in full.
 | `iup.set(h, name, v)` | Sets an attribute |
 | `iup.get(h, name)` | Reads an attribute, as a string or `nil` |
 | `iup.show(h)`, `iup.hide(h)` | Shows or hides a dialog |
+| `iup.popup(h, x, y)` | Shows a menu or a dialog, and holds the other dialogs until it closes |
+| `iup.update(h)` | Asks a control to be drawn again |
+| `iup.draw(h, op, ...)` | Draws on a canvas: `:begin`, `:end`, `:line`, `:rectangle`, `:arc`, `:text` |
 
 | Event | Callback of IUP |
 |-------|-----------------|
 | `:action [h]` | `ACTION` (a button was pressed, ...) |
 | `:value [h]` | `VALUECHANGED_CB` (a text was edited, ...) |
 | `:close [h]` | `CLOSE_CB` (a dialog was closed) |
+| `:button [h,but,press,x,y,status]` | `BUTTON_CB` (a button of the mouse on a canvas) |
+| `:motion [h,x,y,status]` | `MOTION_CB` (the mouse moved on a canvas) |
+| `:focus [h,focus]` | `GETFOCUS_CB` and `KILLFOCUS_CB` |
+| `:popup [h]` | A popup was closed |
+
+An event is emitted inside its callback, so the program reacts before
+IUP goes on. What a callback returns to IUP is set before it happens,
+in the attribute `ATM_<callback>` of the control:
+`iup.set(dlg, "ATM_CLOSE_CB", "IGNORE")` refuses to close a dialog.
 
 A handle is a native value: a control with no parent is destroyed when
 its handle is released, and a dialog destroys its controls.
 
 A known limitation: a dialog cannot be a `pin`, since a pinned value
 cannot appear in the pattern of an `await` (`:close [h=dlg]`). It is a
-`val`, and is destroyed when its last reference goes.
+`val`, and is destroyed when its last reference goes. With a `pin`,
+the pattern is written `:close until it.h == dlg`.
 
 ## Tests
 
@@ -91,3 +121,4 @@ in C that opens a dialog and presses its button.
 
 [lang]: https://github.com/ia-atmos/lang
 [iup]: https://www.tecgraf.puc-rio.br/iup/
+[7guis]: https://eugenkiss.github.io/7guis/
