@@ -14,8 +14,9 @@ Kept current as items open and close.
 - What to build (the author, 2026-11-14): all the examples of
   `lua-atmos/env-iup` and also 7GUIs. `hello` and `button-counter` are
   done; `iup-net` needs the network (`env-uv`, I6).
-- I2: counter, temperature converter, flight booker. I3: timer, CRUD.
-  I4: circle drawer, cells.
+- I3: timer, CRUD. I4: circle drawer, cells. (I2 is done.)
+- The flight booker shows its message in a label: make it a dialog
+  when the modal dialog exists (I4).
 - The callbacks with arguments (the mouse on a canvas, the keys, the
   item of a list): today only `ACTION`, `VALUECHANGED_CB`, and
   `CLOSE_CB` become events, with the handle alone.
