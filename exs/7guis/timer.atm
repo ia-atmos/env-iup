@@ -1,0 +1,51 @@
+;; 7GUIs, task 4: Timer.
+;; A gauge and a label show the elapsed time, a slider sets the
+;; duration, and a button resets the time. The time stops at the
+;; duration, and goes on at once if the duration grows.
+
+val bar = iup.new(:progressbar, [min=0, max=1, size=120, handlename="bar"])
+val lbl = iup.new(:label,  [title="0.0s", size=120, handlename="lbl"])
+val sld = iup.new(:val,    [min=0, max=30, value=15, size="120x15", handlename="sld"])
+val rst = iup.new(:button, [title="Reset", size=120, handlename="rst"])
+val dlg = iup.new(:dialog, [
+    title      = "Timer",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:vbox, [
+        iup.new(:hbox, [iup.new(:label, [title="Elapsed Time:"]), bar, ngap=10]),
+        lbl,
+        iup.new(:hbox, [iup.new(:label, [title="Duration:"]), sld, ngap=10]),
+        rst,
+        ngap=5,
+    ]),
+])
+iup.show(dlg)
+
+var elapsed  = 0        ;; both in microseconds
+var duration = 15s
+
+func show () {
+    iup.set(lbl, "TITLE", string.format("%.1fs", elapsed/1s))
+    iup.set(bar, "VALUE", if duration > 0 => elapsed/duration => 1)
+}
+
+watching :close [h=dlg] {
+    par {
+        loop dt on :clock {
+            if elapsed < duration {
+                set elapsed = math.min(elapsed+dt, duration)
+                show()
+            }
+        }
+    } with {
+        loop on :value [h=sld] {
+            set duration = tonumber(iup.get(sld, "VALUE")) * 1s
+            show()
+        }
+    } with {
+        loop on :action [h=rst] {
+            set elapsed = 0
+            show()
+        }
+    }
+}

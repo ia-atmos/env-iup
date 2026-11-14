@@ -1,0 +1,18 @@
+# the time passes
+1000:get:lbl:TITLE
+2500:get:lbl:TITLE
+2500:get:bar:VALUE
+# a shorter duration: the time stops
+3000:set:sld:VALUE=3
+3010:get:lbl:TITLE
+4000:get:lbl:TITLE
+4000:get:bar:VALUE
+# a longer one: it goes on
+4000:set:sld:VALUE=6
+5000:get:lbl:TITLE
+5000:get:bar:VALUE
+# reset
+5000:click:rst
+5500:get:lbl:TITLE
+5500:shot:out/7guis-timer.png
+6000:close:dlg
