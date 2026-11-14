@@ -1,0 +1,36 @@
+# the start: three names, nothing selected
+50:get:lst:COUNT
+50:get:update:ACTIVE
+50:get:delete:ACTIVE
+# select the second
+100:set:lst:VALUE=2
+110:get:name:VALUE
+110:get:surname:VALUE
+110:get:update:ACTIVE
+# update it
+200:set:name:VALUE=Erika
+210:click:update
+250:get:lst:2
+250:get:update:ACTIVE
+# create
+300:set:name:VALUE=John
+300:set:surname:VALUE=Tester
+310:click:create
+350:get:lst:COUNT
+350:get:lst:4
+# filter
+400:set:flt:VALUE=T
+410:get:lst:COUNT
+410:get:lst:1
+410:get:lst:2
+# delete the second of the filtered ones
+500:set:lst:VALUE=2
+510:click:delete
+550:get:lst:COUNT
+560:set:flt:VALUE=
+570:get:lst:COUNT
+570:get:lst:1
+570:get:lst:2
+570:get:lst:3
+600:shot:out/7guis-crud.png
+700:close:dlg

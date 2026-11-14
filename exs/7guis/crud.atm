@@ -1,0 +1,110 @@
+;; 7GUIs, task 5: CRUD.
+;; A list of names, filtered by a prefix of the surname. The buttons
+;; create a name from the two fields, and update or delete the selected
+;; one, and are only enabled when they apply.
+
+val db = [
+    [name="Hans",  surname="Emil"],
+    [name="Max",   surname="Mustermann"],
+    [name="Roman", surname="Tisch"],
+]
+var shown = []          ;; the indexes in `db` of the items of the list
+
+val flt  = iup.new(:text, [size=60, handlename="flt"])
+val lst  = iup.new(:list, [size="120x60", handlename="lst"])
+val tnam = iup.new(:text, [size=80, handlename="name"])
+val tsur = iup.new(:text, [size=80, handlename="surname"])
+val bcre = iup.new(:button, [title="Create", handlename="create"])
+val bupd = iup.new(:button, [title="Update", handlename="update"])
+val bdel = iup.new(:button, [title="Delete", handlename="delete"])
+val dlg  = iup.new(:dialog, [
+    title      = "CRUD",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:vbox, [
+        iup.new(:hbox, [iup.new(:label, [title="Filter prefix:"]), flt, ngap=10]),
+        iup.new(:hbox, [
+            lst,
+            iup.new(:vbox, [
+                iup.new(:hbox, [iup.new(:label, [title="Name:", size=40]),    tnam]),
+                iup.new(:hbox, [iup.new(:label, [title="Surname:", size=40]), tsur]),
+                ngap=5,
+            ]),
+            ngap=10,
+        ]),
+        iup.new(:hbox, [bcre, bupd, bdel, ngap=10]),
+        ngap=10,
+    ]),
+])
+iup.show(dlg)
+
+;; The index in `db` of the selected item, or nil.
+func selected () {
+    val i = tonumber(iup.get(lst, "VALUE")) || 0
+    if i > 0 => shown@(i-1) => nil
+}
+
+;; The buttons that apply.
+func buttons () {
+    val sel = (selected() != nil)
+    iup.set(bupd, "ACTIVE", sel)
+    iup.set(bdel, "ACTIVE", sel)
+}
+
+;; Fills the list with the names that pass the filter.
+func refresh () {
+    val pre = iup.get(flt, "VALUE") || ""
+    iup.set(lst, "REMOVEITEM", "ALL")
+    set shown = []
+    loop i,p in db {
+        if (#pre == 0) || (string.find(p.surname, pre) == 0) {
+            iup.set(lst, "APPENDITEM", p.surname ++ ", " ++ p.name)
+            vector.insert(shown, i)
+        }
+    }
+    buttons()
+}
+
+;; The name in the two fields.
+func fields () {
+    [name = iup.get(tnam, "VALUE") || "", surname = iup.get(tsur, "VALUE") || ""]
+}
+
+watching :close [h=dlg] {
+    refresh()
+    par {
+        loop on :value [h=flt] {
+            refresh()
+        }
+    } with {
+        loop on :value [h=lst] {
+            val i = selected()
+            if i != nil {
+                iup.set(tnam, "VALUE", db@i.name)
+                iup.set(tsur, "VALUE", db@i.surname)
+            }
+            buttons()
+        }
+    } with {
+        loop on :action [h=bcre] {
+            vector.insert(db, fields())
+            refresh()
+        }
+    } with {
+        loop on :action [h=bupd] {
+            val i = selected()
+            if i != nil {
+                set db@i = fields()
+                refresh()
+            }
+        }
+    } with {
+        loop on :action [h=bdel] {
+            val i = selected()
+            if i != nil {
+                vector.remove(db, i)
+                refresh()
+            }
+        }
+    }
+}

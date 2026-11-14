@@ -1,0 +1,19 @@
+lst.COUNT = 3
+update.ACTIVE = NO
+delete.ACTIVE = NO
+name.VALUE = Max
+surname.VALUE = Mustermann
+update.ACTIVE = YES
+lst.2 = Mustermann, Erika
+update.ACTIVE = NO
+lst.COUNT = 4
+lst.4 = Tester, John
+lst.COUNT = 2
+lst.1 = Tisch, Roman
+lst.2 = Tester, John
+lst.COUNT = 1
+lst.COUNT = 3
+lst.1 = Emil, Hans
+lst.2 = Mustermann, Erika
+lst.3 = Tisch, Roman
+exit 0
