@@ -1,0 +1,9 @@
+undo.ACTIVE = NO
+undo.ACTIVE = YES
+redo.ACTIVE = NO
+adj.VISIBLE = YES
+dlg.ACTIVE = NO
+dlg.ACTIVE = YES
+redo.ACTIVE = YES
+redo.ACTIVE = NO
+exit 0

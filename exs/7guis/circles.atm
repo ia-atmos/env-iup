@@ -1,0 +1,170 @@
+;; 7GUIs, task 6: Circle Drawer.
+;; A click on an empty area of the canvas creates a circle. The circle
+;; under the mouse is filled. A click with the right button on it opens
+;; a menu, whose single entry opens a dialog with a slider that adjusts
+;; its diameter. Undo and redo walk the history of creations and
+;; adjustments: an adjustment enters the history when its dialog closes.
+
+val cs = []             ;; the circles: [x, y, d]
+val hist = []           ;; the history: :new [c] or :dia [c, old, new]
+var done = 0            ;; the entries of the history that are applied
+var over = nil          ;; the circle under the mouse
+
+val undo = iup.new(:button, [title="Undo", size=50, handlename="undo"])
+val redo = iup.new(:button, [title="Redo", size=50, handlename="redo"])
+val cnv  = iup.new(:canvas, [rastersize="400x250", border=true, handlename="cnv"])
+val dlg  = iup.new(:dialog, [
+    title      = "Circle Drawer",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:vbox, [
+        iup.new(:hbox, [iup.new(:fill), undo, redo, iup.new(:fill), ngap=10]),
+        cnv,
+        ngap=10,
+    ]),
+])
+
+val item = iup.new(:item, [title="Adjust diameter..", handlename="item"])
+val menu = iup.new(:menu, [item])
+
+val sld  = iup.new(:val, [min=10, max=200, size="150x15", handlename="sld"])
+val lbl  = iup.new(:label, [title="", size=150])
+val adj  = iup.new(:dialog, [
+    title      = "Adjust",
+    margin     = "10x10",
+    handlename = "adj",
+    iup.new(:vbox, [lbl, sld, ngap=5]),
+])
+
+iup.show(dlg)
+
+;; The circle that has the point, the nearest one first, or nil.
+func find (x, y) {
+    var best, min
+    loop _,c in cs {
+        val dist = math.sqrt((c.x-x)*(c.x-x) + (c.y-y)*(c.y-y))
+        if (dist <= c.d/2) && ((min == nil) || (dist < min)) {
+            set best, min = c, dist
+        }
+    }
+    best
+}
+
+func buttons () {
+    iup.set(undo, "ACTIVE", done > 0)
+    iup.set(redo, "ACTIVE", done < #hist)
+}
+
+;; A new entry of the history, which drops what was undone.
+func record (e) {
+    loop {
+        while #hist > done
+        vector.remove(hist)
+    }
+    vector.insert(hist, e)
+    set done = #hist
+    buttons()
+}
+
+;; Applies or reverts an entry of the history.
+func apply (e, fwd) {
+    if e.tag == :new {
+        if fwd {
+            vector.insert(cs, e.c)
+        } else {
+            vector.remove(cs)
+            set over = nil
+        }
+    } else {
+        set e.c.d = if fwd => e.new => e.old
+    }
+}
+
+func draw () {
+    iup.draw(cnv, :begin)
+    iup.set(cnv, "DRAWCOLOR", "255 255 255")
+    iup.set(cnv, "DRAWSTYLE", "FILL")
+    iup.draw(cnv, :rectangle, 0, 0, 2000, 2000)
+    loop _,c in cs {
+        val r = c.d // 2
+        if c == over {
+            iup.set(cnv, "DRAWCOLOR", "200 200 200")
+            iup.set(cnv, "DRAWSTYLE", "FILL")
+            iup.draw(cnv, :arc, c.x-r, c.y-r, c.x+r, c.y+r)
+        }
+        iup.set(cnv, "DRAWCOLOR", "0 0 0")
+        iup.set(cnv, "DRAWSTYLE", "STROKE")
+        iup.draw(cnv, :arc, c.x-r, c.y-r, c.x+r, c.y+r)
+    }
+    iup.draw(cnv, :end)
+}
+
+;; The dialog that adjusts the diameter of a circle, until it closes.
+task adjust (c) {
+    val old = c.d
+    iup.set(lbl, "TITLE", "Adjust diameter of circle at (" ++ c.x ++ ", " ++ c.y ++ ").")
+    iup.set(sld, "VALUE", c.d)
+    iup.set(dlg, "ACTIVE", false)       ;; the dialog holds the main one
+    iup.show(adj)
+    watching :close [h=adj] {
+        loop on :value [h=sld] {
+            set c.d = math.floor(tonumber(iup.get(sld, "VALUE")))
+            iup.update(cnv)
+        }
+    }
+    iup.set(dlg, "ACTIVE", true)
+    if c.d != old {
+        record(:dia [c=c, old=old, new=c.d])
+    }
+}
+
+watching :close [h=dlg] {
+    buttons()
+    par {
+        loop on :action [h=cnv] {
+            draw()
+        }
+    } with {
+        loop e on :motion [h=cnv] {
+            val c = find(e.x, e.y)
+            if c != over {
+                set over = c
+                iup.update(cnv)
+            }
+        }
+    } with {
+        loop e on :button [h=cnv] {
+            if e.press {
+                val c = find(e.x, e.y)
+                if (e.but == 1) && (c == nil) {
+                    val new = [x=e.x, y=e.y, d=40]
+                    vector.insert(cs, new)
+                    set over = new
+                    record(:new [c=new])
+                    iup.update(cnv)
+                }
+                if (e.but == 3) && (c != nil) {
+                    iup.popup(menu)
+                    val x = await <:action [h=item] || :popup [h=menu]>
+                    if x.tag == :action {
+                        await adjust(c)
+                    }
+                }
+            }
+        }
+    } with {
+        loop on :action [h=undo] {
+            set done = done - 1
+            apply(hist@done, false)
+            buttons()
+            iup.update(cnv)
+        }
+    } with {
+        loop on :action [h=redo] {
+            apply(hist@done, true)
+            set done = done + 1
+            buttons()
+            iup.update(cnv)
+        }
+    }
+}

@@ -1,0 +1,29 @@
+50:get:undo:ACTIVE
+# two circles
+100:click:cnv:100,100
+200:click:cnv:250,120
+300:get:undo:ACTIVE
+300:get:redo:ACTIVE
+350:shot:out/7guis-circles-1.png
+# the diameter of the first one
+400:rclick:cnv:100,100
+500:act:item
+600:get:adj:VISIBLE
+600:get:dlg:ACTIVE
+700:set:sld:VALUE=120
+800:close:adj
+900:get:dlg:ACTIVE
+950:shot:out/7guis-circles-2.png
+# undo twice, redo once
+1000:click:undo
+1100:shot:out/7guis-circles-3.png
+1200:click:undo
+1300:get:redo:ACTIVE
+1400:click:redo
+1500:move:cnv:250,120
+1600:shot:out/7guis-circles-4.png
+# a new circle drops what was undone
+1700:click:cnv:300,200
+1800:get:redo:ACTIVE
+1900:shot:out/7guis-circles-5.png
+2000:close:dlg
