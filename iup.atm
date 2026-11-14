@@ -82,8 +82,8 @@
 ;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
 ;;                              (the `VALUECHANGED_CB` is called)
 ;;      ms:get:name:ATTR        prints an attribute, as `name.ATTR = value`
-;;      ms:act:name             calls the `ACTION` of a control, such as an
-;;                              item of a menu, which is then closed
+;;      ms:act:name             chooses an item of a menu (its `ACTION` is
+;;                              called, and the menu is closed)
 ;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
 ;;      ms:shot:file.png        saves the screen (needs `import`)
 ;;      ms:quit                 terminates the program
@@ -119,6 +119,7 @@ static AStatus ATI_ST   = A_OK;     // the status of the program
 static int     ATI_BUSY = 0;        // the program is reacting
 static int     ATI_QUIT = 0;        // the script asked to terminate
 static int     ATI_POPS = 0;        // the popups in course
+static int     ATI_TICK = 0;        // the timer of the time is running
 
 // The events that happen while the program is reacting (it called a
 // function of IUP that called a callback): they wait for it.
@@ -426,6 +427,9 @@ static int      ATI_POPQ_N = 0;
 static Ihandle* ATI_POPT   = NULL;
 
 static int ati_pop_cb (Ihandle* t) {
+    if (ATI_TICK) {
+        return IUP_DEFAULT;     // not inside the tick, which would stop
+    }
     IupSetAttribute(t, "RUN", "NO");
     while (ATI_POPQ_N > 0) {
         AVal h = ATI_POPQ[0].h;
@@ -589,8 +593,9 @@ static void ati_script (const char* s, int ms) {
                 printf("%s.%s = %s\n", arg, val, (v==NULL) ? "nil" : v);
             } else if (!strcmp(act, "act")) {
                 ati_call(h, "ACTION");
-                if (ATI_POPS > 0) {
-                    IupExitLoop();      // the menu of the item
+                Ihandle* m = IupGetParent(h);
+                if (m!=NULL && !strcmp(IupGetClassName(m), "menu")) {
+                    IupUnmap(m);        // closes the menu of the item
                 }
             } else if (!strcmp(act, "close")) {
                 if (ati_call(h, "CLOSE_CB") != IUP_IGNORE) {
@@ -620,6 +625,7 @@ static int64_t ati_now (void) {
 static int ati_tick (Ihandle* t) {
     (void) t;
     int64_t us = 0;
+    ATI_TICK = 1;
     if (ATI_SCRIPT != NULL) {
         ati_script(ATI_SCRIPT, ATI_MS);
         ATI_MS += 10;
@@ -635,6 +641,7 @@ static int ati_tick (Ihandle* t) {
         ati_drain();
     }
     ati_check();
+    ATI_TICK = 0;
     return IUP_DEFAULT;
 }
 
