@@ -1,0 +1,75 @@
+;; 7GUIs, task 3: Flight Booker.
+;; A choice between a one-way and a return flight, two dates, and a
+;; button to book. The date of the return is only enabled for a return
+;; flight. A date that is not well formed is red and disables the
+;; button, and so does a return before the departure.
+
+;; The date `dd.mm.yyyy` as a number that can be compared, or nil.
+func date (s) {
+    val ps = string.split(s || "", ".")
+    if #ps != 3 {
+        return nil
+    }
+    val d, m, y = tonumber(ps@0), tonumber(ps@1), tonumber(ps@2)
+    if !(d && m && y) || (#(ps@2) != 4) {
+        return nil
+    }
+    if (d != math.floor(d)) || (m != math.floor(m)) || (y != math.floor(y)) {
+        return nil
+    }
+    val leap = ((y%4 == 0) && (y%100 != 0)) || (y%400 == 0)
+    val days = [31, (if leap => 29 => 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    if (m < 1) || (m > 12) || (d < 1) || (d > days@(m-1)) {
+        return nil
+    }
+    y*10000 + m*100 + d
+}
+
+val cmb = iup.new(:list, [dropdown=true, size=90, handlename="cmb"])
+iup.set(cmb, "1", "one-way flight")
+iup.set(cmb, "2", "return flight")
+iup.set(cmb, "VALUE", 1)
+
+val t1  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t1"])
+val t2  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t2"])
+val but = iup.new(:button, [title="Book", size=90, handlename="but"])
+val msg = iup.new(:label,  [title="", size=260, handlename="msg"])
+val dlg = iup.new(:dialog, [
+    title      = "Book Flight",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:vbox, [cmb, t1, t2, but, msg, ngap=5]),
+])
+iup.show(dlg)
+
+;; Shows the constraints in the controls.
+func update () {
+    val ret = (iup.get(cmb, "VALUE") == "2")
+    val d1  = date(iup.get(t1, "VALUE"))
+    val d2  = date(iup.get(t2, "VALUE"))
+    iup.set(t2, "ACTIVE", ret)
+    iup.set(t1, "BGCOLOR", if d1 => "255 255 255" => "255 0 0")
+    iup.set(t2, "BGCOLOR", if d2 || !ret => "255 255 255" => "255 0 0")
+    val ok = d1 && (!ret || (d2 && (d2 >= d1)))
+    iup.set(but, "ACTIVE", !!ok)        ;; a boolean: nil would reset it
+}
+
+watching :close [h=dlg] {
+    update()
+    par {
+        loop on :value {
+            update()
+        }
+    } with {
+        loop on :action [h=but] {
+            val t = iup.get(t1, "VALUE")
+            if iup.get(cmb, "VALUE") == "2" {
+                iup.set(msg, "TITLE", "You have booked a return flight on "
+                    ++ t ++ " and " ++ iup.get(t2, "VALUE") ++ ".")
+            } else {
+                iup.set(msg, "TITLE", "You have booked a one-way flight on "
+                    ++ t ++ ".")
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+t2.ACTIVE = NO
+but.ACTIVE = YES
+msg.TITLE = You have booked a one-way flight on 27.03.2014.
+t1.BGCOLOR = 255 0 0
+but.ACTIVE = NO
+t1.BGCOLOR = 255 255 255
+but.ACTIVE = YES
+t2.ACTIVE = YES
+but.ACTIVE = NO
+t2.BGCOLOR = 255 0 0
+but.ACTIVE = NO
+but.ACTIVE = YES
+msg.TITLE = You have booked a return flight on 28.02.2014 and 29.02.2016.
+exit 0

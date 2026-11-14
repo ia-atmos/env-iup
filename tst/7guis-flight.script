@@ -1,0 +1,26 @@
+# the start: one-way, the return is disabled
+50:get:t2:ACTIVE
+50:get:but:ACTIVE
+100:click:but
+150:get:msg:TITLE
+# a date that is not well formed
+200:set:t1:VALUE=31.02.2014
+210:get:t1:BGCOLOR
+210:get:but:ACTIVE
+220:set:t1:VALUE=28.02.2014
+230:get:t1:BGCOLOR
+230:get:but:ACTIVE
+# a return flight, before the departure
+300:set:cmb:VALUE=2
+310:get:t2:ACTIVE
+320:set:t2:VALUE=27.02.2014
+330:get:but:ACTIVE
+340:set:t2:VALUE=x
+350:get:t2:BGCOLOR
+350:get:but:ACTIVE
+360:set:t2:VALUE=29.02.2016
+370:get:but:ACTIVE
+400:click:but
+450:get:msg:TITLE
+500:shot:out/7guis-flight.png
+600:close:dlg
