@@ -49,6 +49,7 @@
 ;;      ms:click:name           presses a button, with the mouse
 ;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
 ;;                              (the `VALUECHANGED_CB` is called)
+;;      ms:get:name:ATTR        prints an attribute, as `name.ATTR = value`
 ;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
 ;;      ms:shot:file.png        saves the screen (needs `import`)
 ;;      ms:quit                 terminates the program
@@ -369,6 +370,9 @@ static int ati_script (const char* s, int ms) {
                     IupSetStrAttribute(h, val, eq);
                     ati_call(h, "VALUECHANGED_CB");
                 }
+            } else if (!strcmp(act, "get") && val!=NULL) {
+                const char* v = IupGetAttribute(h, val);
+                printf("%s.%s = %s\n", arg, val, (v==NULL) ? "nil" : v);
             } else if (!strcmp(act, "close")) {
                 Icallback f = IupGetCallback(h, "CLOSE_CB");
                 if (f==NULL || f(h)!=IUP_IGNORE) {

@@ -7,7 +7,8 @@
 #
 # A test `name` is:
 #
-#   tst/name.atm or exs/name.atm    the program
+#   tst/name.atm or exs/name.atm    the program (`7guis-x` is
+#                                   `exs/7guis/x.atm`)
 #   tst/name.script                 the actions, one per line (optional)
 #   tst/name.out                    the expected output
 #
@@ -30,6 +31,7 @@ fail=0
 for t in "$@"; do
     prog=tst/$t.atm
     [ -f "$prog" ] || prog=exs/$t.atm
+    [ -f "$prog" ] || prog=exs/7guis/${t#7guis-}.atm
     script=
     if [ -f "tst/$t.script" ]; then
         script=$(grep -v '^#' "tst/$t.script" | grep -v '^$' | paste -sd, -)
