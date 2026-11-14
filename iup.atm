@@ -35,6 +35,8 @@
 ;;                              `BUTTON_CB` (a button of the mouse, `1` to
 ;;                              `3`, was pressed or released on a canvas)
 ;;      :motion [h,x,y,status]  `MOTION_CB` (the mouse moved on a canvas)
+;;      :focus  [h,focus]       `GETFOCUS_CB` and `KILLFOCUS_CB` (a control
+;;                              got or lost the focus of the keyboard)
 ;;      :popup  [h]             a popup was closed
 ;;
 ;; An event is emitted inside its callback, so the program reacts before
@@ -285,12 +287,30 @@ static int ati_cb_motion (Ihandle* h, int x, int y, char* status) {
     return ret;
 }
 
+static int ati_focus (Ihandle* h, int focus, const char* cb) {
+    AVal evt = ati_evt("focus", h);
+    ati_fld(evt, "focus", a_bool(focus));
+    int ret = ati_ret(h, cb);
+    ati_fire(evt);
+    return ret;
+}
+
+static int ati_cb_getfocus (Ihandle* h) {
+    return ati_focus(h, 1, "GETFOCUS_CB");
+}
+
+static int ati_cb_killfocus (Ihandle* h) {
+    return ati_focus(h, 0, "KILLFOCUS_CB");
+}
+
 static const struct { const char* cb; Icallback f; } ATI_CBS[] = {
     { "ACTION",          (Icallback) ati_cb_action },
     { "VALUECHANGED_CB", (Icallback) ati_cb_value  },
     { "CLOSE_CB",        (Icallback) ati_cb_close  },
     { "BUTTON_CB",       (Icallback) ati_cb_button },
     { "MOTION_CB",       (Icallback) ati_cb_motion },
+    { "GETFOCUS_CB",     (Icallback) ati_cb_getfocus  },
+    { "KILLFOCUS_CB",    (Icallback) ati_cb_killfocus },
 };
 #define ATI_CBS_N ((int)(sizeof(ATI_CBS)/sizeof(ATI_CBS[0])))
 
