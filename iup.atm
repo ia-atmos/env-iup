@@ -1,0 +1,476 @@
+;; An environment for graphical user interfaces, over IUP.
+;;
+;;      atmos-iup prog.atm              ;; the dedicated compiler (`make`)
+;;
+;;      include "iup.atm"               ;; or with the plain compiler
+;;
+;; The binding is thin and generic, as the C interface of IUP itself:
+;;
+;;      iup.new(class, t)       a control of the given class (`:button`,
+;;                              `:text`, `:hbox`, `:dialog`, ...): the named
+;;                              fields of `t` are its attributes, and the
+;;                              positional ones are its children
+;;      iup.set(h, name, v)     sets an attribute
+;;      iup.get(h, name)        reads an attribute, as a string or nil
+;;      iup.show(h)             shows a dialog
+;;      iup.hide(h)             hides a dialog
+;;
+;; The names of the attributes are those of IUP, in any case
+;; (`title="Count"` is `TITLE`). A value is a string, a number, or a
+;; boolean (`"YES"` and `"NO"`).
+;;
+;; The program runs inside the loop of IUP, which emits the callbacks of
+;; the controls as events, each with the handle of its control:
+;;
+;;      :action [h]             `ACTION` (a button was pressed, ...)
+;;      :value  [h]             `VALUECHANGED_CB` (a text was edited, ...)
+;;      :close  [h]             `CLOSE_CB` (a dialog was closed)
+;;
+;; An event is emitted after its callback returns. What the callback
+;; returns to IUP is set before it happens, in an attribute of the
+;; control with the name of the callback and the prefix `ATM_`:
+;; `iup.set(dlg, "ATM_CLOSE_CB", "IGNORE")` refuses to close a dialog.
+;; The values are `DEFAULT` (when not set), `IGNORE`, `CONTINUE`, and
+;; `CLOSE`. As any attribute of IUP, a control that does not have it
+;; takes it from its parent.
+;;
+;; Time passes inside the loop, so that `await 1s` works as usual.
+;;
+;; A handle is a native value. A control that has no parent is destroyed
+;; when its handle is released: `pin` a dialog to destroy it, and all its
+;; controls, when the block terminates. The controls inside a dialog
+;; belong to it, and are not pinned.
+;;
+;; To test with no person (under `xvfb-run`), `IUP_ATM_SCRIPT` holds a
+;; list of actions at given times, in milliseconds, separated by commas.
+;; The time is then virtual, in steps of 10ms. A control is given by its
+;; attribute `HANDLENAME`, the global name of IUP (`IupSetHandle`):
+;;
+;;      ms:click:name           presses a button, with the mouse
+;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
+;;                              (the `VALUECHANGED_CB` is called)
+;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
+;;      ms:shot:file.png        saves the screen (needs `import`)
+;;      ms:quit                 terminates the program
+
+```:prelude
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <time.h>
+#include <unistd.h>
+#include <iup.h>
+
+static const char* ATI_KIND = "iup.handle";
+
+// The slot of a control that points back to its native value. It is
+// not a reference: the value clears it when it is released. It is kept
+// as a callback, and not as an attribute, since a control inherits the
+// attributes that it does not have from its parent.
+#define ATI_NAT "_ATM_NAT"
+
+static ANat* ati_nat_get (Ihandle* h) {
+    return (ANat*) IupGetCallback(h, ATI_NAT);
+}
+
+static void ati_nat_set (Ihandle* h, ANat* nat) {
+    IupSetCallback(h, ATI_NAT, (Icallback) nat);
+}
+
+// The callbacks that become events, and their tags.
+static const struct { const char* cb; const char* tag; } ATI_CBS[] = {
+    { "ACTION",          "action" },
+    { "VALUECHANGED_CB", "value"  },
+    { "CLOSE_CB",        "close"  },
+};
+#define ATI_CBS_N ((int)(sizeof(ATI_CBS)/sizeof(ATI_CBS[0])))
+
+// The events that wait for the callbacks to return.
+#define ATI_QUEUE_MAX 256
+static struct { int cb; AVal h; } ATI_QUEUE[ATI_QUEUE_MAX];
+static int ATI_QUEUE_N = 0;
+
+// A control was destroyed by IUP (with its dialog): its native value,
+// if any, no longer has what to destroy.
+static int ati_destroy_cb (Ihandle* h) {
+    ANat* nat = ati_nat_get(h);
+    if (nat != NULL) {
+        nat->ptr = NULL;
+    }
+    return IUP_DEFAULT;
+}
+
+// The finalizer of a handle: destroys the control, unless it belongs to
+// a parent, which destroys it.
+static void ati_fin (void* ptr) {
+    Ihandle* h = ptr;
+    ati_nat_set(h, NULL);
+    if (IupGetParent(h) == NULL) {
+        IupDestroy(h);
+    }
+}
+
+// The native value of a control (owned): the one the program holds, or
+// a new one.
+static AVal ati_nat (Ihandle* h) {
+    ANat* nat = ati_nat_get(h);
+    if (nat != NULL) {
+        AVal v = a_obj(&nat->hdr);
+        a_inc(v);
+        return v;
+    }
+    AVal v = a_nat(h, ati_fin, ATI_KIND);
+    ati_nat_set(h, A_NAT_OF(v));
+    return v;
+}
+
+// The control of a handle, or NULL.
+static Ihandle* ati_ptr (AVal v) {
+    return a_nat_is(v, ATI_KIND) ? a_nat_ptr(v) : NULL;
+}
+
+static int ati_cb (Ihandle* h, int cb) {
+    if (ATI_QUEUE_N < ATI_QUEUE_MAX) {
+        ATI_QUEUE[ATI_QUEUE_N].cb = cb;
+        ATI_QUEUE[ATI_QUEUE_N].h  = ati_nat(h);
+        ATI_QUEUE_N++;
+    }
+    char name[64];
+    snprintf(name, sizeof(name), "ATM_%s", ATI_CBS[cb].cb);
+    const char* ret = IupGetAttribute(h, name);
+    if (ret == NULL) {
+        return IUP_DEFAULT;
+    } else if (!strcmp(ret, "IGNORE")) {
+        return IUP_IGNORE;
+    } else if (!strcmp(ret, "CONTINUE")) {
+        return IUP_CONTINUE;
+    } else if (!strcmp(ret, "CLOSE")) {
+        return IUP_CLOSE;
+    }
+    return IUP_DEFAULT;
+}
+
+// One function per callback, since IUP does not tell which one it
+// calls. They ignore the other arguments of the callback.
+static int ati_cb_0 (Ihandle* h) { return ati_cb(h, 0); }
+static int ati_cb_1 (Ihandle* h) { return ati_cb(h, 1); }
+static int ati_cb_2 (Ihandle* h) { return ati_cb(h, 2); }
+static const Icallback ATI_CBS_F[] = { ati_cb_0, ati_cb_1, ati_cb_2 };
+
+// Emits the events of the queue: `:tag [h=handle]`.
+static AStatus ati_drain (AStatus st) {
+    for (int i=0; i<ATI_QUEUE_N; i++) {
+        AVal h = ATI_QUEUE[i].h;
+        if (st == A_OK) {
+            AVal evt = a_tab();
+            AVal tag = a_strz(ATI_CBS[ATI_QUEUE[i].cb].tag);
+            AVal key = a_strz("h");
+            a_tag(evt, tag);
+            a_setindex(evt, key, h);
+            st = atm_emit(evt);
+            a_dec(key);
+            a_dec(tag);
+            a_dec(evt);
+        }
+        a_dec(h);
+    }
+    ATI_QUEUE_N = 0;
+    return st;
+}
+
+// The name of an attribute, in upper case.
+static void ati_name (char* dst, size_t n, const char* src) {
+    size_t i = 0;
+    for (; i+1<n && src[i]!='\0'; i++) {
+        dst[i] = toupper((unsigned char) src[i]);
+    }
+    dst[i] = '\0';
+}
+
+static AStatus ati_set (AVal h, AVal k, AVal v) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    if (k.type != A_STR) {
+        return a_error("invalid attribute : expected string");
+    }
+    char name[128];
+    ati_name(name, sizeof(name), A_STR_OF(k)->s);
+    if (v.type == A_NIL) {
+        IupSetAttribute(ih, name, NULL);
+    } else if (v.type == A_BOOL) {
+        IupSetAttribute(ih, name, a_truthy(v) ? "YES" : "NO");
+    } else if (v.type==A_STR || a_isnum(v)) {
+        AVal s = a_tostring(v);
+        if (!strcmp(name, "HANDLENAME")) {
+            IupSetHandle(A_STR_OF(s)->s, ih);
+        } else {
+            IupSetStrAttribute(ih, name, A_STR_OF(s)->s);
+        }
+        a_dec(s);
+    } else {
+        return a_error("invalid value : attribute %s", name);
+    }
+    return A_OK;
+}
+
+static AStatus ati_get (AVal* dst, AVal h, AVal k) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    if (k.type != A_STR) {
+        return a_error("invalid attribute : expected string");
+    }
+    char name[128];
+    ati_name(name, sizeof(name), A_STR_OF(k)->s);
+    const char* v = IupGetAttribute(ih, name);
+    *dst = (v == NULL) ? a_nil() : a_strz(v);
+    return A_OK;
+}
+
+static AStatus ati_new (AVal* dst, AVal cls, AVal t) {
+    if (cls.type != A_STR) {
+        return a_error("invalid class : expected string");
+    }
+    if (t.type!=A_NIL && t.type!=A_TAB) {
+        return a_error("invalid attributes : expected table");
+    }
+    Ihandle* ih = IupCreate(A_STR_OF(cls)->s);
+    if (ih == NULL) {
+        return a_error("invalid class : %s", A_STR_OF(cls)->s);
+    }
+    AVal h = ati_nat(ih);
+    IupSetCallback(ih, "DESTROY_CB", ati_destroy_cb);
+    for (int i=0; i<ATI_CBS_N; i++) {
+        IupSetCallback(ih, ATI_CBS[i].cb, ATI_CBS_F[i]);
+    }
+    AStatus st = A_OK;
+    if (t.type == A_TAB) {
+        // the children, in order
+        for (int64_t i=0; st==A_OK; i++) {
+            AVal c = a_tab_get(A_TAB_OF(t), a_int(i));
+            if (c.type == A_NIL) {
+                break;
+            }
+            Ihandle* ic = ati_ptr(c);
+            if (ic == NULL) {
+                st = a_error("invalid child : expected handle");
+            } else if (IupGetParent(ic) != NULL) {
+                st = a_error("invalid child : it has a parent");
+            } else if (IupAppend(ih, ic) == NULL) {
+                st = a_error("invalid child : %s is not a container",
+                    A_STR_OF(cls)->s);
+            }
+        }
+        // the attributes
+        uint32_t pos = 0;
+        AVal k, v;
+        while (st==A_OK && a_tab_next(A_TAB_OF(t), &pos, &k, &v)) {
+            if (k.type == A_STR) {
+                st = ati_set(h, k, v);
+            }
+        }
+    }
+    if (st != A_OK) {
+        a_dec(h);
+        return st;
+    }
+    *dst = h;
+    return A_OK;
+}
+
+static AStatus ati_show (AVal h, int show) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    if (show) {
+        IupShow(ih);
+    } else {
+        IupHide(ih);
+    }
+    return A_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TEST MODE
+///////////////////////////////////////////////////////////////////////////////
+
+// Lets IUP process what is pending, for some real time.
+static void ati_settle (int ms) {
+    for (int i=0; i<ms; i+=5) {
+        IupFlush();
+        usleep(5000);
+    }
+    IupFlush();
+}
+
+// Calls a callback of a control as IUP would, with only the handle.
+static void ati_call (Ihandle* h, const char* cb) {
+    Icallback f = IupGetCallback(h, cb);
+    if (f != NULL) {
+        f(h);
+    }
+}
+
+// The actions of the script that are due at `ms`. Returns 1 on `quit`.
+static int ati_script (const char* s, int ms) {
+    int quit = 0;
+    while (s!=NULL && *s!='\0') {
+        char item[256];
+        size_t n = strcspn(s, ",");
+        snprintf(item, sizeof(item), "%.*s", (int)n, s);
+        s += n + (s[n] == ',');
+        char* act = strchr(item, ':');
+        if (act==NULL || atoi(item)!=ms) {
+            continue;
+        }
+        act++;
+        char* arg = strchr(act, ':');
+        if (arg != NULL) {
+            *arg++ = '\0';
+        }
+        if (!strcmp(act, "quit")) {
+            quit = 1;
+        } else if (!strcmp(act, "shot") && arg!=NULL) {
+            char cmd[512];
+            snprintf(cmd, sizeof(cmd), "import -window root '%s'", arg);
+            ati_settle(50);
+            if (system(cmd) != 0) {
+                fprintf(stderr, "iup : shot failed : %s\n", arg);
+            }
+        } else if (arg != NULL) {
+            char* val = strchr(arg, ':');
+            if (val != NULL) {
+                *val++ = '\0';
+            }
+            Ihandle* h = IupGetHandle(arg);
+            if (h == NULL) {
+                fprintf(stderr, "iup : no control named %s\n", arg);
+            } else if (!strcmp(act, "click")) {
+                int x, y, w, hh;
+                IupGetIntInt(h, "SCREENPOSITION", &x, &y);
+                IupGetIntInt(h, "RASTERSIZE", &w, &hh);
+                x += w/2;
+                y += hh/2;
+                IupSetfAttribute(NULL, "CURSORPOS", "%dx%d", x, y);
+                ati_settle(20);
+                IupSetfAttribute(NULL, "MOUSEBUTTON", "%dx%d 1 1", x, y);
+                ati_settle(20);
+                IupSetfAttribute(NULL, "MOUSEBUTTON", "%dx%d 1 0", x, y);
+                ati_settle(20);
+            } else if (!strcmp(act, "set") && val!=NULL) {
+                char* eq = strchr(val, '=');
+                if (eq != NULL) {
+                    *eq++ = '\0';
+                    IupSetStrAttribute(h, val, eq);
+                    ati_call(h, "VALUECHANGED_CB");
+                }
+            } else if (!strcmp(act, "close")) {
+                Icallback f = IupGetCallback(h, "CLOSE_CB");
+                if (f==NULL || f(h)!=IUP_IGNORE) {
+                    IupHide(h);
+                }
+            }
+        }
+    }
+    return quit;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DRIVER
+///////////////////////////////////////////////////////////////////////////////
+
+static int64_t ati_now (void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t)ts.tv_sec*1000000 + ts.tv_nsec/1000;
+}
+
+int main (int argc, char** argv) {
+    if (IupOpen(&argc, &argv) != IUP_NOERROR) {
+        fprintf(stderr, "iup : cannot open the display\n");
+        return 1;
+    }
+    const char* script = getenv("IUP_ATM_SCRIPT");
+
+    atm_init(argc, argv);
+    AStatus st = atm_main();
+
+    int quit = 0;
+    if (script != NULL) {
+        // test mode: virtual time, in steps of 10ms
+        ati_settle(200);
+        st = ati_drain(st);
+        for (int ms=0; st==A_OK && !quit && atm_alive(); ms+=10) {
+            quit = ati_script(script, ms);
+            IupFlush();
+            st = ati_drain(st);
+            if (st==A_OK && !quit && atm_alive()) {
+                st = atm_emit(a_int(10000));
+            }
+        }
+    } else {
+        int64_t prv = ati_now();
+        while (st==A_OK && atm_alive()) {
+            IupFlush();
+            st = ati_drain(st);
+            int64_t now = ati_now();
+            if (st==A_OK && now>prv && atm_alive()) {
+                st = atm_emit(a_int(now - prv));
+            }
+            prv = now;
+            usleep(5000);
+        }
+    }
+    st = ati_drain(st);
+
+    if (st == A_OK) {
+        st = atm_stop();
+    }
+    fflush(stdout);
+    if (st == A_ESCAPE) {
+        st = a_escape_err();
+    }
+    if (st != A_OK) {
+        a_error_dump();
+    }
+    atm_quit();
+    IupClose();
+    return (st == A_OK) ? 0 : 1;
+}
+```
+
+val iup = [
+    ;; iup.new(class, t): a control of the given class
+    new = func (cls, t) {
+        var h
+        `st = ati_new(&$h, $cls, $t);`
+        h
+    },
+
+    ;; iup.set(h, name, v): sets an attribute
+    set = func (h, name, v) {
+        `st = ati_set($h, $name, $v);`
+    },
+
+    ;; iup.get(h, name): reads an attribute, as a string or nil
+    get = func (h, name) {
+        var v
+        `st = ati_get(&$v, $h, $name);`
+        v
+    },
+
+    ;; iup.show(h): shows a dialog
+    show = func (h) {
+        `st = ati_show($h, 1);`
+    },
+
+    ;; iup.hide(h): hides a dialog
+    hide = func (h) {
+        `st = ati_show($h, 0);`
+    },
+]
