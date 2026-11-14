@@ -5,15 +5,16 @@ Kept current as items open and close.
 
 ## A. Decisions waiting for the author
 
-- The thin and generic binding (confirm): asked on 2026-11-13.
-- 7GUIs as what to build (confirm): to ask after that.
+- What to build over the binding: the author answered "something
+  else" to 7GUIs (2026-11-14). Asked what; no answer yet. I2 to I5
+  wait for it.
 - The local remote still points to `fsantanna/iup`: the change to
   `ia-atmos/env-iup` was blocked by the session. Pushes work by the
   redirect.
 
 ## B. Work known and not done
 
-- I1: the environment `iup.atm`. Waits for the answer on the binding.
+- I1: the environment `iup.atm`, thin and generic (confirmed).
   Before it: read `doc/manual.md` of the compiler.
 - `atmos-iup`: the build makes the dedicated compiler (`make env` of
   `ia-atmos/lang`); the runner of the tests, the examples, and the
