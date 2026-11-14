@@ -1,0 +1,36 @@
+;; 7GUIs, task 2: Temperature Converter.
+;; Two fields, in Celsius and in Fahrenheit. When the user edits one of
+;; them with a number, the other shows the conversion. A text that is
+;; not a number changes nothing.
+
+val tc = iup.new(:text, [size=50, handlename="c"])
+val tf = iup.new(:text, [size=50, handlename="f"])
+val dlg = iup.new(:dialog, [
+    title      = "TempConv",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:hbox, [
+        tc, iup.new(:label, [title="Celsius ="]),
+        tf, iup.new(:label, [title="Fahrenheit"]),
+        ngap=10, alignment="ACENTER",
+    ]),
+])
+iup.show(dlg)
+
+watching :close [h=dlg] {
+    par {
+        loop on :value [h=tc] {
+            val c = tonumber(iup.get(tc, "VALUE"))
+            if c {
+                iup.set(tf, "VALUE", string.format("%g", c*(9/5) + 32))
+            }
+        }
+    } with {
+        loop on :value [h=tf] {
+            val f = tonumber(iup.get(tf, "VALUE"))
+            if f {
+                iup.set(tc, "VALUE", string.format("%g", (f-32) * (5/9)))
+            }
+        }
+    }
+}

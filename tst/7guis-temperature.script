@@ -1,0 +1,12 @@
+100:set:c:VALUE=100
+110:get:f:VALUE
+200:set:f:VALUE=32
+210:get:c:VALUE
+300:set:c:VALUE=abc
+310:get:f:VALUE
+400:set:c:VALUE=-40
+410:get:f:VALUE
+420:set:f:VALUE=
+430:get:c:VALUE
+500:shot:out/7guis-temperature.png
+600:close:dlg

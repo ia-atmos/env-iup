@@ -1,0 +1,6 @@
+f.VALUE = 212
+c.VALUE = 0
+f.VALUE = 32
+f.VALUE = -40
+c.VALUE = -40
+exit 0
