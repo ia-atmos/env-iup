@@ -15,6 +15,9 @@ Kept current as items open and close.
 
 - I1: the environment `iup.atm`. Waits for the answer on the binding.
   Before it: read `doc/manual.md` of the compiler.
+- `atmos-iup`: the build makes the dedicated compiler (`make env` of
+  `ia-atmos/lang`); the runner of the tests, the examples, and the
+  documents use it. With I1, when `iup.atm` exists.
 - I2 to I6: see `261113-env-iup.md`.
 - The Mac: verify whether IUP has a driver, and say so in the readme.
 - `www.tecgraf.puc-rio.br` is not reachable from the container (the
