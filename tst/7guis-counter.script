@@ -1,0 +1,5 @@
+100:click:but
+200:click:but
+300:get:txt:VALUE
+400:shot:out/7guis-counter.png
+500:close:dlg

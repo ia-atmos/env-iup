@@ -1,0 +1,20 @@
+;; 7GUIs, task 1: Counter.
+;; A field with a number and a button that increments it.
+
+val txt = iup.new(:text,   [value=0, readonly=true, size=50, handlename="txt"])
+val but = iup.new(:button, [title="Count", size=50, handlename="but"])
+val dlg = iup.new(:dialog, [
+    title      = "Counter",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:hbox, [txt, but, ngap=10]),
+])
+iup.show(dlg)
+
+watching :close [h=dlg] {
+    var n = 0
+    loop on :action [h=but] {
+        set n = n + 1
+        iup.set(txt, "VALUE", n)
+    }
+}
