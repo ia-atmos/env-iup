@@ -1,6 +1,6 @@
 value	true	hello
 action
 close 1	YES
-close 2	NO
+close 2	YES
 1s
 exit 0

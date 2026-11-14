@@ -14,42 +14,76 @@
 ;;      iup.get(h, name)        reads an attribute, as a string or nil
 ;;      iup.show(h)             shows a dialog
 ;;      iup.hide(h)             hides a dialog
+;;      iup.popup(h, x, y)      shows a menu or a dialog, and holds the other
+;;                              dialogs until it closes
+;;      iup.update(h)           asks a control to be drawn again
+;;      iup.draw(h, op, ...)    draws on a canvas
 ;;
 ;; The names of the attributes are those of IUP, in any case
 ;; (`title="Count"` is `TITLE`). A value is a string, a number, or a
-;; boolean (`"YES"` and `"NO"`).
+;; boolean (`"YES"` and `"NO"`). A `nil` gives the attribute its default
+;; back.
 ;;
 ;; The program runs inside the loop of IUP, which emits the callbacks of
 ;; the controls as events, each with the handle of its control:
 ;;
-;;      :action [h]             `ACTION` (a button was pressed, ...)
+;;      :action [h]             `ACTION` (a button was pressed, a canvas
+;;                              must be drawn, ...)
 ;;      :value  [h]             `VALUECHANGED_CB` (a text was edited, ...)
 ;;      :close  [h]             `CLOSE_CB` (a dialog was closed)
+;;      :button [h,but,press,x,y,status]
+;;                              `BUTTON_CB` (a button of the mouse, `1` to
+;;                              `3`, was pressed or released on a canvas)
+;;      :motion [h,x,y,status]  `MOTION_CB` (the mouse moved on a canvas)
+;;      :popup  [h]             a popup was closed
 ;;
-;; An event is emitted after its callback returns. What the callback
-;; returns to IUP is set before it happens, in an attribute of the
-;; control with the name of the callback and the prefix `ATM_`:
-;; `iup.set(dlg, "ATM_CLOSE_CB", "IGNORE")` refuses to close a dialog.
-;; The values are `DEFAULT` (when not set), `IGNORE`, `CONTINUE`, and
-;; `CLOSE`. As any attribute of IUP, a control that does not have it
-;; takes it from its parent.
+;; An event is emitted inside its callback, so the program reacts before
+;; IUP goes on: a canvas is drawn in the reaction to its `:action`. An
+;; event that happens while the program reacts (it called a function of
+;; IUP that called a callback) waits for the reaction to end.
 ;;
-;; Time passes inside the loop, so that `await 1s` works as usual.
+;; What a callback returns to IUP is set before it happens, in an
+;; attribute of the control with the name of the callback and the prefix
+;; `ATM_`: `iup.set(dlg, "ATM_CLOSE_CB", "IGNORE")` refuses to close a
+;; dialog. The values are `DEFAULT` (when not set), `IGNORE`,
+;; `CONTINUE`, and `CLOSE`. As any attribute of IUP, a control that does
+;; not have it takes it from its parent.
+;;
+;; A popup of IUP only returns when it is closed. So `iup.popup` does
+;; not show it at once, but when the program ends its reaction, and the
+;; event `:popup` tells that it was closed.
+;;
+;; The operations of `iup.draw` are those of `IupDraw` (the color and the
+;; style are the attributes `DRAWCOLOR`, `DRAWSTYLE`, ... of the canvas):
+;;
+;;      iup.draw(h, :begin)     iup.draw(h, :end)
+;;      iup.draw(h, :line, x1, y1, x2, y2)
+;;      iup.draw(h, :rectangle, x1, y1, x2, y2)
+;;      iup.draw(h, :arc, x1, y1, x2, y2 [, a1, a2])
+;;      iup.draw(h, :text, str, x, y)
+;;
+;; Time passes inside the loop, so that `await 1s` works as usual. The
+;; program terminates when its main chunk does, not when the last dialog
+;; is closed.
 ;;
 ;; A handle is a native value. A control that has no parent is destroyed
-;; when its handle is released: `pin` a dialog to destroy it, and all its
-;; controls, when the block terminates. The controls inside a dialog
-;; belong to it, and are not pinned.
+;; when its handle is released, and a dialog destroys its controls.
 ;;
 ;; To test with no person (under `xvfb-run`), `IUP_ATM_SCRIPT` holds a
-;; list of actions at given times, in milliseconds, separated by commas.
+;; list of actions at given times, in milliseconds, separated by `;`.
 ;; The time is then virtual, in steps of 10ms. A control is given by its
 ;; attribute `HANDLENAME`, the global name of IUP (`IupSetHandle`):
 ;;
-;;      ms:click:name           presses a button, with the mouse
+;;      ms:click:name[:x,y]     presses and releases the left button of the
+;;                              mouse on a control (at its center, or at a
+;;                              position inside it)
+;;      ms:rclick:name[:x,y]    the same with the right button
+;;      ms:move:name[:x,y]      moves the mouse
 ;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
 ;;                              (the `VALUECHANGED_CB` is called)
 ;;      ms:get:name:ATTR        prints an attribute, as `name.ATTR = value`
+;;      ms:act:name             calls the `ACTION` of a control, such as an
+;;                              item of a menu, which is then closed
 ;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
 ;;      ms:shot:file.png        saves the screen (needs `import`)
 ;;      ms:quit                 terminates the program
@@ -62,6 +96,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <iup.h>
+#include <iupdraw.h>
 
 static const char* ATI_KIND = "iup.handle";
 
@@ -79,18 +114,57 @@ static void ati_nat_set (Ihandle* h, ANat* nat) {
     IupSetCallback(h, ATI_NAT, (Icallback) nat);
 }
 
-// The callbacks that become events, and their tags.
-static const struct { const char* cb; const char* tag; } ATI_CBS[] = {
-    { "ACTION",          "action" },
-    { "VALUECHANGED_CB", "value"  },
-    { "CLOSE_CB",        "close"  },
-};
-#define ATI_CBS_N ((int)(sizeof(ATI_CBS)/sizeof(ATI_CBS[0])))
+// The state of the driver.
+static AStatus ATI_ST   = A_OK;     // the status of the program
+static int     ATI_BUSY = 0;        // the program is reacting
+static int     ATI_QUIT = 0;        // the script asked to terminate
+static int     ATI_POPS = 0;        // the popups in course
 
-// The events that wait for the callbacks to return.
+// The events that happen while the program is reacting (it called a
+// function of IUP that called a callback): they wait for it.
 #define ATI_QUEUE_MAX 256
-static struct { int cb; AVal h; } ATI_QUEUE[ATI_QUEUE_MAX];
-static int ATI_QUEUE_N = 0;
+static AVal ATI_QUEUE[ATI_QUEUE_MAX];
+static int  ATI_QUEUE_N = 0;
+
+// Emits an event to the program. The event is not consumed.
+static void ati_emit (AVal evt) {
+    if (ATI_ST==A_OK && atm_alive()) {
+        ATI_BUSY++;
+        ATI_ST = atm_emit(evt);
+        ATI_BUSY--;
+    }
+}
+
+static void ati_drain (void) {
+    for (int i=0; i<ATI_QUEUE_N; i++) {
+        ati_emit(ATI_QUEUE[i]);
+        a_dec(ATI_QUEUE[i]);
+    }
+    ATI_QUEUE_N = 0;
+}
+
+// Leaves the loop of IUP when the program is over.
+static void ati_check (void) {
+    if ((ATI_ST!=A_OK || ATI_QUIT || !atm_alive()) && IupMainLoopLevel()>0) {
+        IupExitLoop();
+    }
+}
+
+// An event of IUP (consumed): emitted at once, or kept in the queue.
+static void ati_fire (AVal evt) {
+    if (ATI_BUSY) {
+        if (ATI_QUEUE_N < ATI_QUEUE_MAX) {
+            ATI_QUEUE[ATI_QUEUE_N++] = evt;
+        } else {
+            a_dec(evt);
+        }
+    } else {
+        ati_emit(evt);
+        a_dec(evt);
+        ati_drain();
+        ati_check();
+    }
+}
 
 // A control was destroyed by IUP (with its dialog): its native value,
 // if any, no longer has what to destroy.
@@ -131,14 +205,28 @@ static Ihandle* ati_ptr (AVal v) {
     return a_nat_is(v, ATI_KIND) ? a_nat_ptr(v) : NULL;
 }
 
-static int ati_cb (Ihandle* h, int cb) {
-    if (ATI_QUEUE_N < ATI_QUEUE_MAX) {
-        ATI_QUEUE[ATI_QUEUE_N].cb = cb;
-        ATI_QUEUE[ATI_QUEUE_N].h  = ati_nat(h);
-        ATI_QUEUE_N++;
-    }
+// Sets a field of an event (the value is consumed).
+static void ati_fld (AVal evt, const char* k, AVal v) {
+    AVal key = a_strz(k);
+    a_setindex(evt, key, v);
+    a_dec(key);
+    a_dec(v);
+}
+
+// A new event `:tag [h=handle]`.
+static AVal ati_evt (const char* tag, Ihandle* h) {
+    AVal evt = a_tab();
+    AVal t = a_strz(tag);
+    a_tag(evt, t);
+    a_dec(t);
+    ati_fld(evt, "h", ati_nat(h));
+    return evt;
+}
+
+// What a callback returns: the attribute `ATM_<callback>`.
+static int ati_ret (Ihandle* h, const char* cb) {
     char name[64];
-    snprintf(name, sizeof(name), "ATM_%s", ATI_CBS[cb].cb);
+    snprintf(name, sizeof(name), "ATM_%s", cb);
     const char* ret = IupGetAttribute(h, name);
     if (ret == NULL) {
         return IUP_DEFAULT;
@@ -152,33 +240,58 @@ static int ati_cb (Ihandle* h, int cb) {
     return IUP_DEFAULT;
 }
 
-// One function per callback, since IUP does not tell which one it
-// calls. They ignore the other arguments of the callback.
-static int ati_cb_0 (Ihandle* h) { return ati_cb(h, 0); }
-static int ati_cb_1 (Ihandle* h) { return ati_cb(h, 1); }
-static int ati_cb_2 (Ihandle* h) { return ati_cb(h, 2); }
-static const Icallback ATI_CBS_F[] = { ati_cb_0, ati_cb_1, ati_cb_2 };
+// The callbacks that become events: one function for each, since IUP
+// does not tell which one it calls. The first three ignore the other
+// arguments of their callbacks.
 
-// Emits the events of the queue: `:tag [h=handle]`.
-static AStatus ati_drain (AStatus st) {
-    for (int i=0; i<ATI_QUEUE_N; i++) {
-        AVal h = ATI_QUEUE[i].h;
-        if (st == A_OK) {
-            AVal evt = a_tab();
-            AVal tag = a_strz(ATI_CBS[ATI_QUEUE[i].cb].tag);
-            AVal key = a_strz("h");
-            a_tag(evt, tag);
-            a_setindex(evt, key, h);
-            st = atm_emit(evt);
-            a_dec(key);
-            a_dec(tag);
-            a_dec(evt);
-        }
-        a_dec(h);
-    }
-    ATI_QUEUE_N = 0;
-    return st;
+static int ati_cb_action (Ihandle* h) {
+    int ret = ati_ret(h, "ACTION");
+    ati_fire(ati_evt("action", h));
+    return ret;
 }
+
+static int ati_cb_value (Ihandle* h) {
+    int ret = ati_ret(h, "VALUECHANGED_CB");
+    ati_fire(ati_evt("value", h));
+    return ret;
+}
+
+static int ati_cb_close (Ihandle* h) {
+    int ret = ati_ret(h, "CLOSE_CB");
+    ati_fire(ati_evt("close", h));
+    return ret;
+}
+
+static int ati_cb_button (Ihandle* h, int but, int press, int x, int y, char* status) {
+    AVal evt = ati_evt("button", h);
+    ati_fld(evt, "but",    a_int(but - '0'));
+    ati_fld(evt, "press",  a_bool(press));
+    ati_fld(evt, "x",      a_int(x));
+    ati_fld(evt, "y",      a_int(y));
+    ati_fld(evt, "status", a_strz(status));
+    int ret = ati_ret(h, "BUTTON_CB");
+    ati_fire(evt);
+    return ret;
+}
+
+static int ati_cb_motion (Ihandle* h, int x, int y, char* status) {
+    AVal evt = ati_evt("motion", h);
+    ati_fld(evt, "x",      a_int(x));
+    ati_fld(evt, "y",      a_int(y));
+    ati_fld(evt, "status", a_strz(status));
+    int ret = ati_ret(h, "MOTION_CB");
+    ati_fire(evt);
+    return ret;
+}
+
+static const struct { const char* cb; Icallback f; } ATI_CBS[] = {
+    { "ACTION",          (Icallback) ati_cb_action },
+    { "VALUECHANGED_CB", (Icallback) ati_cb_value  },
+    { "CLOSE_CB",        (Icallback) ati_cb_close  },
+    { "BUTTON_CB",       (Icallback) ati_cb_button },
+    { "MOTION_CB",       (Icallback) ati_cb_motion },
+};
+#define ATI_CBS_N ((int)(sizeof(ATI_CBS)/sizeof(ATI_CBS[0])))
 
 // The name of an attribute, in upper case.
 static void ati_name (char* dst, size_t n, const char* src) {
@@ -246,7 +359,7 @@ static AStatus ati_new (AVal* dst, AVal cls, AVal t) {
     AVal h = ati_nat(ih);
     IupSetCallback(ih, "DESTROY_CB", ati_destroy_cb);
     for (int i=0; i<ATI_CBS_N; i++) {
-        IupSetCallback(ih, ATI_CBS[i].cb, ATI_CBS_F[i]);
+        IupSetCallback(ih, ATI_CBS[i].cb, ATI_CBS[i].f);
     }
     AStatus st = A_OK;
     if (t.type == A_TAB) {
@@ -296,6 +409,95 @@ static AStatus ati_show (AVal h, int show) {
     return A_OK;
 }
 
+static AStatus ati_update (AVal h) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    IupUpdate(ih);
+    return A_OK;
+}
+
+// The popups that wait for the program to finish its reaction: a popup
+// only returns when it is closed, so it cannot run inside the program.
+#define ATI_POPQ_MAX 8
+static struct { AVal h; int x; int y; } ATI_POPQ[ATI_POPQ_MAX];
+static int      ATI_POPQ_N = 0;
+static Ihandle* ATI_POPT   = NULL;
+
+static int ati_pop_cb (Ihandle* t) {
+    IupSetAttribute(t, "RUN", "NO");
+    while (ATI_POPQ_N > 0) {
+        AVal h = ATI_POPQ[0].h;
+        int  x = ATI_POPQ[0].x;
+        int  y = ATI_POPQ[0].y;
+        ATI_POPQ_N--;
+        memmove(&ATI_POPQ[0], &ATI_POPQ[1], ATI_POPQ_N*sizeof(ATI_POPQ[0]));
+        Ihandle* ih = ati_ptr(h);
+        if (ih != NULL) {
+            ATI_POPS++;
+            IupPopup(ih, x, y);
+            ATI_POPS--;
+            ih = ati_ptr(h);
+            if (ih != NULL) {
+                ati_fire(ati_evt("popup", ih));
+            }
+        }
+        a_dec(h);
+        ati_check();
+    }
+    return IUP_DEFAULT;
+}
+
+static AStatus ati_popup (AVal h, AVal x, AVal y) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    if (ATI_POPQ_N >= ATI_POPQ_MAX) {
+        return a_error("too many popups");
+    }
+    int def = !strcmp(IupGetClassName(ih), "menu") ? IUP_MOUSEPOS : IUP_CENTERPARENT;
+    a_inc(h);
+    ATI_POPQ[ATI_POPQ_N].h = h;
+    ATI_POPQ[ATI_POPQ_N].x = a_isnum(x) ? (int)a_dbl(x) : def;
+    ATI_POPQ[ATI_POPQ_N].y = a_isnum(y) ? (int)a_dbl(y) : def;
+    ATI_POPQ_N++;
+    IupSetAttribute(ATI_POPT, "RUN", "YES");
+    return A_OK;
+}
+
+// Draws on a canvas: `op` is `begin`, `end`, `line`, `rectangle`,
+// `arc`, or `text`.
+static AStatus ati_draw (AVal h, AVal op, AVal a, AVal b, AVal c, AVal d, AVal e, AVal f) {
+    Ihandle* ih = ati_ptr(h);
+    if (ih == NULL) {
+        return a_error("invalid handle");
+    }
+    if (op.type != A_STR) {
+        return a_error("invalid operation : expected string");
+    }
+    const char* o = A_STR_OF(op)->s;
+    int n4 = a_isnum(a) && a_isnum(b) && a_isnum(c) && a_isnum(d);
+    if (!strcmp(o, "begin")) {
+        IupDrawBegin(ih);
+    } else if (!strcmp(o, "end")) {
+        IupDrawEnd(ih);
+    } else if (!strcmp(o, "line") && n4) {
+        IupDrawLine(ih, (int)a_dbl(a), (int)a_dbl(b), (int)a_dbl(c), (int)a_dbl(d));
+    } else if (!strcmp(o, "rectangle") && n4) {
+        IupDrawRectangle(ih, (int)a_dbl(a), (int)a_dbl(b), (int)a_dbl(c), (int)a_dbl(d));
+    } else if (!strcmp(o, "arc") && n4) {
+        IupDrawArc(ih, (int)a_dbl(a), (int)a_dbl(b), (int)a_dbl(c), (int)a_dbl(d),
+            a_isnum(e) ? a_dbl(e) : 0, a_isnum(f) ? a_dbl(f) : 360);
+    } else if (!strcmp(o, "text") && a.type==A_STR && a_isnum(b) && a_isnum(c)) {
+        IupDrawText(ih, A_STR_OF(a)->s, 0, (int)a_dbl(b), (int)a_dbl(c), 0, 0);
+    } else {
+        return a_error("invalid operation : %s", o);
+    }
+    return A_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // TEST MODE
 ///////////////////////////////////////////////////////////////////////////////
@@ -310,21 +512,37 @@ static void ati_settle (int ms) {
 }
 
 // Calls a callback of a control as IUP would, with only the handle.
-static void ati_call (Ihandle* h, const char* cb) {
+static int ati_call (Ihandle* h, const char* cb) {
     Icallback f = IupGetCallback(h, cb);
-    if (f != NULL) {
-        f(h);
-    }
+    return (f == NULL) ? IUP_DEFAULT : f(h);
 }
 
-// The actions of the script that are due at `ms`. Returns 1 on `quit`.
-static int ati_script (const char* s, int ms) {
-    int quit = 0;
+// A press or a release of a button of the mouse at a position of a
+// control (its center, by default).
+static void ati_mouse (Ihandle* h, const char* pos, int but, int press) {
+    int x, y, w, hh, dx, dy;
+    IupGetIntInt(h, "SCREENPOSITION", &x, &y);
+    IupGetIntInt(h, "RASTERSIZE", &w, &hh);
+    if (pos!=NULL && sscanf(pos, "%d,%d", &dx, &dy)==2) {
+        x += dx;
+        y += dy;
+    } else {
+        x += w/2;
+        y += hh/2;
+    }
+    IupSetfAttribute(NULL, "CURSORPOS", "%dx%d", x, y);
+    ati_settle(20);
+    IupSetfAttribute(NULL, "MOUSEBUTTON", "%dx%d %d %d", x, y, but, press);
+    ati_settle(20);
+}
+
+// The actions of the script that are due at `ms`.
+static void ati_script (const char* s, int ms) {
     while (s!=NULL && *s!='\0') {
         char item[256];
-        size_t n = strcspn(s, ",");
+        size_t n = strcspn(s, ";");
         snprintf(item, sizeof(item), "%.*s", (int)n, s);
-        s += n + (s[n] == ',');
+        s += n + (s[n] == ';');
         char* act = strchr(item, ':');
         if (act==NULL || atoi(item)!=ms) {
             continue;
@@ -335,7 +553,7 @@ static int ati_script (const char* s, int ms) {
             *arg++ = '\0';
         }
         if (!strcmp(act, "quit")) {
-            quit = 1;
+            ATI_QUIT = 1;
         } else if (!strcmp(act, "shot") && arg!=NULL) {
             char cmd[512];
             snprintf(cmd, sizeof(cmd), "import -window root '%s'", arg);
@@ -352,17 +570,13 @@ static int ati_script (const char* s, int ms) {
             if (h == NULL) {
                 fprintf(stderr, "iup : no control named %s\n", arg);
             } else if (!strcmp(act, "click")) {
-                int x, y, w, hh;
-                IupGetIntInt(h, "SCREENPOSITION", &x, &y);
-                IupGetIntInt(h, "RASTERSIZE", &w, &hh);
-                x += w/2;
-                y += hh/2;
-                IupSetfAttribute(NULL, "CURSORPOS", "%dx%d", x, y);
-                ati_settle(20);
-                IupSetfAttribute(NULL, "MOUSEBUTTON", "%dx%d 1 1", x, y);
-                ati_settle(20);
-                IupSetfAttribute(NULL, "MOUSEBUTTON", "%dx%d 1 0", x, y);
-                ati_settle(20);
+                ati_mouse(h, val, 1, 1);
+                ati_mouse(h, val, 1, 0);
+            } else if (!strcmp(act, "rclick")) {
+                ati_mouse(h, val, 3, 1);
+                ati_mouse(h, val, 3, 0);
+            } else if (!strcmp(act, "move")) {
+                ati_mouse(h, val, 1, -1);
             } else if (!strcmp(act, "set") && val!=NULL) {
                 char* eq = strchr(val, '=');
                 if (eq != NULL) {
@@ -373,20 +587,27 @@ static int ati_script (const char* s, int ms) {
             } else if (!strcmp(act, "get") && val!=NULL) {
                 const char* v = IupGetAttribute(h, val);
                 printf("%s.%s = %s\n", arg, val, (v==NULL) ? "nil" : v);
+            } else if (!strcmp(act, "act")) {
+                ati_call(h, "ACTION");
+                if (ATI_POPS > 0) {
+                    IupExitLoop();      // the menu of the item
+                }
             } else if (!strcmp(act, "close")) {
-                Icallback f = IupGetCallback(h, "CLOSE_CB");
-                if (f==NULL || f(h)!=IUP_IGNORE) {
+                if (ati_call(h, "CLOSE_CB") != IUP_IGNORE) {
                     IupHide(h);
                 }
             }
         }
     }
-    return quit;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // DRIVER
 ///////////////////////////////////////////////////////////////////////////////
+
+static const char* ATI_SCRIPT = NULL;
+static int         ATI_MS     = 0;      // the virtual time of the script
+static int64_t     ATI_PRV    = 0;      // the real time of the last tick
 
 static int64_t ati_now (void) {
     struct timespec ts;
@@ -394,44 +615,71 @@ static int64_t ati_now (void) {
     return (int64_t)ts.tv_sec*1000000 + ts.tv_nsec/1000;
 }
 
+// The timer that lets the time pass in the program. In the test mode,
+// each tick is 10ms of virtual time, after the actions that are due.
+static int ati_tick (Ihandle* t) {
+    (void) t;
+    int64_t us = 0;
+    if (ATI_SCRIPT != NULL) {
+        ati_script(ATI_SCRIPT, ATI_MS);
+        ATI_MS += 10;
+        us = 10000;
+    } else {
+        int64_t now = ati_now();
+        us = now - ATI_PRV;
+        ATI_PRV = now;
+    }
+    if (us>0 && !ATI_BUSY && !ATI_QUIT) {
+        AVal evt = a_int(us);
+        ati_emit(evt);
+        ati_drain();
+    }
+    ati_check();
+    return IUP_DEFAULT;
+}
+
 int main (int argc, char** argv) {
     if (IupOpen(&argc, &argv) != IUP_NOERROR) {
         fprintf(stderr, "iup : cannot open the display\n");
         return 1;
     }
-    const char* script = getenv("IUP_ATM_SCRIPT");
+    ATI_SCRIPT = getenv("IUP_ATM_SCRIPT");
+
+    // the loop ends with the program, not with the last dialog
+    IupSetGlobal("LOCKLOOP", "YES");
+
+    ATI_POPT = IupTimer();
+    IupSetAttribute(ATI_POPT, "TIME", "1");
+    IupSetCallback(ATI_POPT, "ACTION_CB", ati_pop_cb);
+
+    Ihandle* tick = IupTimer();
+    IupSetAttribute(tick, "TIME", (ATI_SCRIPT != NULL) ? "1" : "10");
+    IupSetCallback(tick, "ACTION_CB", ati_tick);
 
     atm_init(argc, argv);
-    AStatus st = atm_main();
+    ATI_BUSY++;
+    ATI_ST = atm_main();
+    ATI_BUSY--;
 
-    int quit = 0;
-    if (script != NULL) {
-        // test mode: virtual time, in steps of 10ms
-        ati_settle(200);
-        st = ati_drain(st);
-        for (int ms=0; st==A_OK && !quit && atm_alive(); ms+=10) {
-            quit = ati_script(script, ms);
-            IupFlush();
-            st = ati_drain(st);
-            if (st==A_OK && !quit && atm_alive()) {
-                st = atm_emit(a_int(10000));
-            }
-        }
-    } else {
-        int64_t prv = ati_now();
-        while (st==A_OK && atm_alive()) {
-            IupFlush();
-            st = ati_drain(st);
-            int64_t now = ati_now();
-            if (st==A_OK && now>prv && atm_alive()) {
-                st = atm_emit(a_int(now - prv));
-            }
-            prv = now;
-            usleep(5000);
-        }
+    if (ATI_SCRIPT != NULL) {
+        ati_settle(200);        // the dialogs are on the screen
     }
-    st = ati_drain(st);
+    ati_drain();
+    ATI_PRV = ati_now();
+    if (ATI_ST==A_OK && atm_alive()) {
+        IupSetAttribute(tick, "RUN", "YES");
+        IupMainLoop();
+        IupSetAttribute(tick, "RUN", "NO");
+    }
 
+    for (int i=0; i<ATI_QUEUE_N; i++) {
+        a_dec(ATI_QUEUE[i]);
+    }
+    for (int i=0; i<ATI_POPQ_N; i++) {
+        a_dec(ATI_POPQ[i].h);
+    }
+
+    AStatus st = ATI_ST;
     if (st == A_OK) {
         st = atm_stop();
     }
@@ -476,5 +724,21 @@ val iup = [
     ;; iup.hide(h): hides a dialog
     hide = func (h) {
         `st = ati_show($h, 0);`
+    },
+
+    ;; iup.popup(h, x, y): shows a menu or a dialog, and holds the other
+    ;; dialogs until it closes
+    popup = func (h, x, y) {
+        `st = ati_popup($h, $x, $y);`
+    },
+
+    ;; iup.update(h): asks a control to be drawn again
+    update = func (h) {
+        `st = ati_update($h);`
+    },
+
+    ;; iup.draw(h, op, ...): draws on a canvas
+    draw = func (h, op, a, b, c, d, e, f) {
+        `st = ati_draw($h, $op, $a, $b, $c, $d, $e, $f);`
     },
 ]

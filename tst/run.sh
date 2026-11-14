@@ -34,7 +34,7 @@ for t in "$@"; do
     [ -f "$prog" ] || prog=exs/7guis/${t#7guis-}.atm
     script=
     if [ -f "tst/$t.script" ]; then
-        script=$(grep -v '^#' "tst/$t.script" | grep -v '^$' | paste -sd, -)
+        script=$(grep -v '^#' "tst/$t.script" | grep -v '^$' | paste -sd";" -)
     fi
     why=
     if ! ./atmos-iup -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
