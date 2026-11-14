@@ -20,8 +20,9 @@ Kept current as items open and close.
   `lua-atmos/env-iup` and also 7GUIs. Done: `hello`, `button-counter`,
   and the seven tasks. Not done: `iup-net`, which needs the network
   (`env-uv`, I6, to decide with the author).
-- I5: `doc/api.md`, `doc/guide.md`, and the study of each task against
-  a version with callbacks.
+- I5: the study of each task against a version with callbacks (the C
+  of IUP): lines, state variables, what the sequence made explicit.
+  `doc/api.md` and `doc/guide.md` are written.
 - In the test mode, a real click on an item of a menu does nothing
   (the item is highlighted and not activated; cause not found). The
   action `act` calls the callback and unmaps the menu instead.
@@ -32,9 +33,6 @@ Kept current as items open and close.
   arguments are not events yet.
 - The screenshots are saved and not compared: decide where the pixels
   are stable.
-- A modal dialog as a case for `toggle` or `grab` (issue 22 of
-  `atmos-lang/atmos`): the circle drawer does it with `ACTIVE=NO` on
-  the main dialog. To report to the compiler session with the code.
 - The Mac: IUP 3.32 distributes binaries for Linux and Windows only;
   the readme says Linux on x86-64. Windows is not tried.
 - `www.tecgraf.puc-rio.br` is not reachable from the container (the
@@ -42,7 +40,9 @@ Kept current as items open and close.
 
 ## C. Reported and not acknowledged
 
-- (none)
+- To the compiler session (2026-11-14): the modal dialog of the circle
+  drawer as a case for `grab` (issue 22 of `atmos-lang/atmos`); and
+  `e@1.d` does not compile (`1.d` reads as a number).
 
 ## D. Older items
 

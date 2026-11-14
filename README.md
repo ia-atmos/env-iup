@@ -70,8 +70,8 @@ ignores. Nothing of IUP is committed.
 
 ## Interface
 
-The binding is thin and generic, as the C interface of IUP itself. The
-header of `iup.atm` describes it in full.
+The binding is thin and generic, as the C interface of IUP itself. See
+the [guide](doc/guide.md) and the [API](doc/api.md).
 
 | Function | |
 |----------|-|
