@@ -1,0 +1,25 @@
+;; The life of a handle: a dialog destroys its controls, and a handle of
+;; a destroyed control is invalid.
+
+var lbl
+do {
+    val l = iup.new(:label, [title="in"])
+    val dlg = iup.new(:dialog, [l])
+    iup.show(dlg)
+    set lbl = l
+    print(iup.get(lbl, "TITLE"))
+}                               ;; the dialog is destroyed here
+print(catch true { iup.get(lbl, "TITLE") })
+
+;; a control with no parent is destroyed with its handle
+do {
+    val l = iup.new(:label, [title="alone"])
+    print(iup.get(l, "TITLE"))
+}
+
+;; a control outlives its handle inside a dialog
+val dlg = iup.new(:dialog, [iup.new(:button, [title="b", handlename="b"])])
+iup.show(dlg)
+val e = await :action
+print(e.tag, iup.get(e.h, "TITLE"))
+print("ok")
