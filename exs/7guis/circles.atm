@@ -5,15 +5,15 @@
 ;; its diameter. Undo and redo walk the history of creations and
 ;; adjustments: an adjustment enters the history when its dialog closes.
 
-val cs = []             ;; the circles: [x, y, d]
-val hist = []           ;; the history: :new [c] or :dia [c, old, new]
+pin cs = []             ;; the circles: [x, y, d]
+pin hist = []           ;; the history: :new [c] or :dia [c, old, new]
 var done = 0            ;; the entries of the history that are applied
 var over = nil          ;; the circle under the mouse
 
-val undo = iup.new(:button, [title="Undo", size=50, handlename="undo"])
-val redo = iup.new(:button, [title="Redo", size=50, handlename="redo"])
-val cnv  = iup.new(:canvas, [rastersize="400x250", border=true, handlename="cnv"])
-val dlg  = iup.new(:dialog, [
+pin undo = iup.new(:button, [title="Undo", size=50, handlename="undo"])
+pin redo = iup.new(:button, [title="Redo", size=50, handlename="redo"])
+pin cnv  = iup.new(:canvas, [rastersize="400x250", border=true, handlename="cnv"])
+pin dlg  = iup.new(:dialog, [
     title      = "Circle Drawer",
     margin     = "10x10",
     handlename = "dlg",
@@ -24,12 +24,12 @@ val dlg  = iup.new(:dialog, [
     ]),
 ])
 
-val item = iup.new(:item, [title="Adjust diameter..", handlename="item"])
-val menu = iup.new(:menu, [item])
+pin item = iup.new(:item, [title="Adjust diameter..", handlename="item"])
+pin menu = iup.new(:menu, [item])
 
-val sld  = iup.new(:val, [min=10, max=200, size="150x15", handlename="sld"])
-val lbl  = iup.new(:label, [title="", size=150])
-val adj  = iup.new(:dialog, [
+pin sld  = iup.new(:val, [min=10, max=200, size="150x15", handlename="sld"])
+pin lbl  = iup.new(:label, [title="", size=150])
+pin adj  = iup.new(:dialog, [
     title      = "Adjust",
     margin     = "10x10",
     handlename = "adj",
@@ -137,8 +137,8 @@ watching :close [h=dlg] {
             if e.press {
                 val c = find(e.x, e.y)
                 if (e.but == 1) && (c == nil) {
-                    val new = [x=e.x, y=e.y, d=40]
-                    vector.insert(cs, new)
+                    vector.insert(cs, [x=e.x, y=e.y, d=40])
+                    val new = cs@(#cs-1)
                     set over = new
                     record(:new [c=new])
                     iup.update(cnv)
