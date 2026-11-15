@@ -3,21 +3,21 @@
 ;; create a name from the two fields, and update or delete the selected
 ;; one, and are only enabled when they apply.
 
-val db = [
+pin db = [
     [name="Hans",  surname="Emil"],
     [name="Max",   surname="Mustermann"],
     [name="Roman", surname="Tisch"],
 ]
-var shown = []          ;; the indexes in `db` of the items of the list
+pin shown = []          ;; the indexes in `db` of the items of the list
 
-val flt  = iup.new(:text, [size=60, handlename="flt"])
-val lst  = iup.new(:list, [size="120x60", handlename="lst"])
-val tnam = iup.new(:text, [size=80, handlename="name"])
-val tsur = iup.new(:text, [size=80, handlename="surname"])
-val bcre = iup.new(:button, [title="Create", handlename="create"])
-val bupd = iup.new(:button, [title="Update", handlename="update"])
-val bdel = iup.new(:button, [title="Delete", handlename="delete"])
-val dlg  = iup.new(:dialog, [
+pin flt  = iup.new(:text, [size=60, handlename="flt"])
+pin lst  = iup.new(:list, [size="120x60", handlename="lst"])
+pin tnam = iup.new(:text, [size=80, handlename="name"])
+pin tsur = iup.new(:text, [size=80, handlename="surname"])
+pin bcre = iup.new(:button, [title="Create", handlename="create"])
+pin bupd = iup.new(:button, [title="Update", handlename="update"])
+pin bdel = iup.new(:button, [title="Delete", handlename="delete"])
+pin dlg  = iup.new(:dialog, [
     title      = "CRUD",
     margin     = "10x10",
     handlename = "dlg",
@@ -55,7 +55,10 @@ func buttons () {
 func refresh () {
     val pre = iup.get(flt, "VALUE") || ""
     iup.set(lst, "REMOVEITEM", "ALL")
-    set shown = []
+    loop {
+        while #shown > 0
+        vector.remove(shown)
+    }
     loop i,p in db {
         if (#pre == 0) || (string.find(p.surname, pre) == 0) {
             iup.set(lst, "APPENDITEM", p.surname ++ ", " ++ p.name)
