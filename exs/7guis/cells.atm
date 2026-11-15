@@ -9,13 +9,13 @@
 ;; Each formula is a task: it computes its value, tells that it changed,
 ;; and awaits a change in a cell that it reads.
 
-val srcs = []           ;; id -> what the user typed
-val vals = []           ;; id -> the value: a number, a text, or nil
-val hs   = []           ;; id -> the control
+pin srcs = []           ;; id -> what the user typed
+pin vals = []           ;; id -> the value: a number, a text, or nil
+pin hs   = []           ;; id -> the control
 var focus = nil         ;; the id of the cell with the focus
 
 ;; The functions of the formulas, over a vector of numbers.
-val funcs = [
+pin funcs = [
     sum  = func (ns) { var r = 0 ; loop _,n in ns { set r = r + n } ; r },
     prod = func (ns) { var r = 1 ; loop _,n in ns { set r = r * n } ; r },
     add  = func (ns) { ns@0 + ns@1 },
@@ -28,7 +28,7 @@ val funcs = [
 ;; Throws `:Formula` if it is not well formed.
 func eval (src) {
     var pos = 0
-    val deps = []
+    pin deps = []
 
     val func peek () {
         loop {
@@ -87,7 +87,7 @@ func eval (src) {
             }
             set pos = pos + 1
             val c2, r2 = ref()
-            val ns = []
+            pin ns = []
             loop c in (c1, c2) {
                 loop r in (r1, r2) {
                     vector.insert(ns, cell(string.char(65+c) ++ r))
@@ -99,7 +99,7 @@ func eval (src) {
         if (f == nil) || (peek() != "(") {
             throw :Formula
         }
-        val ns = []
+        pin ns = []
         loop {
             set pos = pos + 1               ;; the `(` or the `,`
             loop _,n in expr() {
@@ -114,8 +114,8 @@ func eval (src) {
         [f(ns)]
     }
 
-    val ok, ns = catch :Formula {
-        val ns = expr()
+    pin ok, ns = catch :Formula {
+        pin ns = expr()
         if (#ns != 1) || (peek() != "") {
             throw :Formula
         }
@@ -135,7 +135,7 @@ func show (id) {
 ;; A cell with a formula.
 task Formula (id, src) {
     loop {
-        val v, deps = eval(src)
+        pin v, deps = eval(src)
         set vals@id = v
         show(id)
         emit @:global :cell [id=id]
@@ -143,7 +143,7 @@ task Formula (id, src) {
     }
 }
 
-val kids = [iup.new(:label, [title=""])]
+pin kids = [iup.new(:label, [title=""])]
 loop c in 26 {
     vector.insert(kids, iup.new(:label, [title=string.char(65+c)]))
 }
@@ -159,7 +159,7 @@ set kids.numdiv    = 27
 set kids.sizelin   = 1
 set kids.sizecol   = 1
 set kids.alignmentcol = "ACENTER"
-val dlg = iup.new(:dialog, [
+pin dlg = iup.new(:dialog, [
     title      = "Cells",
     rastersize = "620x400",
     handlename = "dlg",
