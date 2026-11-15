@@ -68,8 +68,9 @@
 ;; program terminates when its main chunk does, not when the last dialog
 ;; is closed.
 ;;
-;; A handle is a native value. A control that has no parent is destroyed
-;; when its handle is released, and a dialog destroys its controls.
+;; A handle is a native value, declared with `pin`. A control that has
+;; no parent is destroyed when its handle is released, and a dialog
+;; destroys its controls.
 ;;
 ;; To test with no person (under `xvfb-run`), `IUP_ATM_SCRIPT` holds a
 ;; list of actions at given times, in milliseconds, separated by `;`.

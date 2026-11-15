@@ -28,9 +28,9 @@ IUP and a table with its attributes and its children. A dialog is a
 control like the others, and `iup.show` puts it on the screen:
 
 ```
-val txt = iup.new(:text,   [value=0, readonly=true, size=60])
-val but = iup.new(:button, [title="Count", size=60])
-val dlg = iup.new(:dialog, [
+pin txt = iup.new(:text,   [value=0, readonly=true, size=60])
+pin but = iup.new(:button, [title="Count", size=60])
+pin dlg = iup.new(:dialog, [
     title  = "Counter",
     margin = "10x10",
     iup.new(:hbox, [txt, but, ngap=10]),
@@ -181,7 +181,7 @@ reads:
 ```
 task Formula (id, src) {
     loop {
-        val v, deps = eval(src)
+        pin v, deps = eval(src)
         set vals@id = v
         show(id)
         emit @:global :cell [id=id]

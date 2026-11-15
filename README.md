@@ -7,9 +7,9 @@ A callback of a control becomes an event, so the logic of a dialog is
 written as a sequence in time:
 
 ```
-val txt = iup.new(:text,   [value=0, readonly=true, size=60])
-val but = iup.new(:button, [title="Count", size=60])
-val dlg = iup.new(:dialog, [
+pin txt = iup.new(:text,   [value=0, readonly=true, size=60])
+pin but = iup.new(:button, [title="Count", size=60])
+pin dlg = iup.new(:dialog, [
     title  = "Button - Counter",
     margin = "10x10",
     iup.new(:hbox, [txt, but, ngap=10]),
@@ -100,11 +100,6 @@ in the attribute `ATM_<callback>` of the control:
 
 A handle is a native value: a control with no parent is destroyed when
 its handle is released, and a dialog destroys its controls.
-
-A known limitation: a dialog cannot be a `pin`, since a pinned value
-cannot appear in the pattern of an `await` (`:close [h=dlg]`). It is a
-`val`, and is destroyed when its last reference goes. With a `pin`,
-the pattern is written `:close until it.h == dlg`.
 
 ## Tests
 

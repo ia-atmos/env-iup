@@ -31,9 +31,9 @@ control:
   parent.
 
 ```
-val txt = iup.new(:text,   [value=0, readonly=true, size=60])
-val but = iup.new(:button, [title="Count"])
-val dlg = iup.new(:dialog, [title="Counter", iup.new(:hbox, [txt, but, ngap=10])])
+pin txt = iup.new(:text,   [value=0, readonly=true, size=60])
+pin but = iup.new(:button, [title="Count"])
+pin dlg = iup.new(:dialog, [title="Counter", iup.new(:hbox, [txt, but, ngap=10])])
 ```
 
 Errors: `invalid class`, `invalid attributes`, `invalid child`,
@@ -165,20 +165,17 @@ The values are `DEFAULT` (when not set), `IGNORE`, `CONTINUE`, and
 
 A handle is a native value of the language, which holds a control:
 
-- A control with no parent is destroyed when its handle is released:
-  when its last reference goes, or when the block of its `pin`
-  terminates.
+- A handle is declared with `pin`, as any value that is created. A
+  control with no parent is destroyed when its handle is released, at
+  the end of the block of its `pin`.
 - A control inside another belongs to it: a dialog destroys all its
   controls. Their handles become invalid, and any function raises
   `invalid handle` for them.
 - A control outlives its handle while it has a parent: an event gets
   a new handle for it.
 
-A dialog cannot be a `pin` today if it appears in the table of a
-pattern, since a pinned value cannot be stored in a table that is not
-pinned: `await :close [h=dlg]` raises `invalid escape : pinned value`.
-The examples declare it with `val`. With a `pin`, the pattern is
-`:close until it.h == dlg`.
+An event holds the handle of its control, so it cannot leave the block
+of that handle.
 
 ## Time and termination
 
