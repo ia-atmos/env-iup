@@ -1,6 +1,6 @@
 ;; The attributes, the conversions of their values, and the errors.
 
-val lbl = iup.new(:label, [title="one"])
+pin lbl = iup.new(:label, [title="one"])
 print(type(lbl), iup.get(lbl, "TITLE"), iup.get(lbl, "title"))
 
 iup.set(lbl, "title", 10)
@@ -20,7 +20,7 @@ iup.set(lbl, "MINE", nil)
 print(iup.get(lbl, "MINE"))
 
 ;; no attributes
-val box = iup.new(:vbox)
+pin box = iup.new(:vbox)
 print(iup.get(box, "ORIENTATION"))
 
 ;; errors
@@ -36,6 +36,6 @@ print(catch true { iup.get(nil, "TITLE") })
 print(catch true { iup.show(nil) })
 
 ;; a control has a single parent
-val dlg = iup.new(:dialog, [iup.new(:vbox, [lbl])])
+pin dlg = iup.new(:dialog, [iup.new(:vbox, [lbl])])
 print(catch true { iup.new(:vbox, [lbl]) })
 print("ok")

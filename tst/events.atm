@@ -1,8 +1,8 @@
 ;; The events, and what a callback returns.
 
-val txt = iup.new(:text,   [handlename="txt"])
-val but = iup.new(:button, [title="b", handlename="but"])
-val dlg = iup.new(:dialog, [handlename="dlg", iup.new(:hbox, [txt, but])])
+pin txt = iup.new(:text,   [handlename="txt"])
+pin but = iup.new(:button, [title="b", handlename="but"])
+pin dlg = iup.new(:dialog, [handlename="dlg", iup.new(:hbox, [txt, but])])
 iup.show(dlg)
 
 ;; a value set by the user
