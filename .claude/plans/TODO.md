@@ -5,11 +5,6 @@ Kept current as items open and close.
 
 ## A. Decisions waiting for the author
 
-- `pin` or `val` for a dialog. `pin dlg` then `await :close [h=dlg]` is
-  an error (a pinned value in the table of a pattern). The compiler
-  session fixed a related defect and sent the question to the session
-  "Pin rules discussion". Until the author decides, the examples use
-  `val`; the other way is `pin` with `:close until it.h == dlg`.
 - The local remote still points to `fsantanna/iup`: the change to
   `ia-atmos/env-iup` was blocked by the session. Pushes work by the
   redirect.
