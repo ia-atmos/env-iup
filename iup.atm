@@ -208,9 +208,11 @@ static Ihandle* ati_ptr (AVal v) {
     return a_nat_is(v, ATI_KIND) ? a_nat_ptr(v) : NULL;
 }
 
-// Sets a field of an event (the value is consumed).
+// Sets a field of an event (the value is consumed). The event is being
+// born: it may hold a pinned handle, and cannot leave its block.
 static void ati_fld (AVal evt, const char* k, AVal v) {
     AVal key = a_strz(k);
+    a_born(evt, v);
     a_setindex(evt, key, v);
     a_dec(key);
     a_dec(v);
@@ -723,7 +725,7 @@ int main (int argc, char** argv) {
 }
 ```
 
-val iup = [
+pin iup = [
     ;; iup.new(class, t): a control of the given class
     new = func (cls, t) {
         var h
