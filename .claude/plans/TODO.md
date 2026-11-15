@@ -15,9 +15,9 @@ Kept current as items open and close.
   `lua-atmos/env-iup` and also 7GUIs. Done: `hello`, `button-counter`,
   and the seven tasks. Not done: `iup-net`, which needs the network
   (`env-uv`, I6, to decide with the author).
-- I5: the study of each task against a version with callbacks (the C
-  of IUP): lines, state variables, what the sequence made explicit.
-  `doc/api.md` and `doc/guide.md` are written.
+- The C versions of the study (`study/*.c`) are compiled and started,
+  not tested: a script of actions for them would make the comparison
+  of behavior a fact.
 - In the test mode, a real click on an item of a menu does nothing
   (the item is highlighted and not activated; cause not found). The
   action `act` calls the callback and unmaps the menu instead.
@@ -35,6 +35,9 @@ Kept current as items open and close.
 
 ## C. Reported and not acknowledged
 
+- To the compiler session (2026-11-15): the report of the migration
+  to the new rules of `pin` (an event built in C needs `a_born`; no
+  `vector.clear`; `vector.insert` does not evaluate to the element).
 - To the compiler session (2026-11-14): the modal dialog of the circle
   drawer as a case for `grab` (issue 22 of `atmos-lang/atmos`); and
   `e@1.d` does not compile (`1.d` reads as a number).

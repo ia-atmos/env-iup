@@ -71,7 +71,9 @@ ignores. Nothing of IUP is committed.
 ## Interface
 
 The binding is thin and generic, as the C interface of IUP itself. See
-the [guide](doc/guide.md) and the [API](doc/api.md).
+the [guide](doc/guide.md) and the [API](doc/api.md). The
+[study](doc/study.md) compares the seven tasks with versions in C with
+callbacks (`study/`).
 
 | Function | |
 |----------|-|
