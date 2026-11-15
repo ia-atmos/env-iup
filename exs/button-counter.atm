@@ -1,8 +1,8 @@
 ;; A button that counts its presses.
 
-val txt = iup.new(:text,   [value=0, readonly=true, size=60])
-val but = iup.new(:button, [title="Count", size=60, handlename="but"])
-val dlg = iup.new(:dialog, [
+pin txt = iup.new(:text,   [value=0, readonly=true, size=60])
+pin but = iup.new(:button, [title="Count", size=60, handlename="but"])
+pin dlg = iup.new(:dialog, [
     title      = "Button - Counter",
     margin     = "10x10",
     handlename = "dlg",

@@ -6,7 +6,7 @@
 
 ;; The date `dd.mm.yyyy` as a number that can be compared, or nil.
 func date (s) {
-    val ps = string.split(s || "", ".")
+    pin ps = string.split(s || "", ".")
     if #ps != 3 {
         return nil
     }
@@ -18,23 +18,23 @@ func date (s) {
         return nil
     }
     val leap = ((y%4 == 0) && (y%100 != 0)) || (y%400 == 0)
-    val days = [31, (if leap => 29 => 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    pin days = [31, (if leap => 29 => 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     if (m < 1) || (m > 12) || (d < 1) || (d > days@(m-1)) {
         return nil
     }
     y*10000 + m*100 + d
 }
 
-val cmb = iup.new(:list, [dropdown=true, size=90, handlename="cmb"])
+pin cmb = iup.new(:list, [dropdown=true, size=90, handlename="cmb"])
 iup.set(cmb, "1", "one-way flight")
 iup.set(cmb, "2", "return flight")
 iup.set(cmb, "VALUE", 1)
 
-val t1  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t1"])
-val t2  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t2"])
-val but = iup.new(:button, [title="Book", size=90, handlename="but"])
-val msg = iup.new(:label,  [title="", size=260, handlename="msg"])
-val dlg = iup.new(:dialog, [
+pin t1  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t1"])
+pin t2  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t2"])
+pin but = iup.new(:button, [title="Book", size=90, handlename="but"])
+pin msg = iup.new(:label,  [title="", size=260, handlename="msg"])
+pin dlg = iup.new(:dialog, [
     title      = "Book Flight",
     margin     = "10x10",
     handlename = "dlg",

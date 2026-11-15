@@ -1,9 +1,9 @@
 ;; 7GUIs, task 1: Counter.
 ;; A field with a number and a button that increments it.
 
-val txt = iup.new(:text,   [value=0, readonly=true, size=50, handlename="txt"])
-val but = iup.new(:button, [title="Count", size=50, handlename="but"])
-val dlg = iup.new(:dialog, [
+pin txt = iup.new(:text,   [value=0, readonly=true, size=50, handlename="txt"])
+pin but = iup.new(:button, [title="Count", size=50, handlename="but"])
+pin dlg = iup.new(:dialog, [
     title      = "Counter",
     margin     = "10x10",
     handlename = "dlg",

@@ -3,9 +3,9 @@
 ;; them with a number, the other shows the conversion. A text that is
 ;; not a number changes nothing.
 
-val tc = iup.new(:text, [size=50, handlename="c"])
-val tf = iup.new(:text, [size=50, handlename="f"])
-val dlg = iup.new(:dialog, [
+pin tc = iup.new(:text, [size=50, handlename="c"])
+pin tf = iup.new(:text, [size=50, handlename="f"])
+pin dlg = iup.new(:dialog, [
     title      = "TempConv",
     margin     = "10x10",
     handlename = "dlg",
