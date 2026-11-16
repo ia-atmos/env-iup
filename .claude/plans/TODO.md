@@ -5,20 +5,17 @@ Kept current as items open and close.
 
 ## A. Decisions waiting for the author
 
+- The versions in Lua of 7GUIs to compare with (asked 2026-11-16):
+  none found in `lua-atmos` or `atmos-lang`. Where are they, or
+  should they be written over `lua-atmos/env-iup`?
 - The local remote still points to `fsantanna/iup`: the change to
   `ia-atmos/env-iup` was blocked by the session. Pushes work by the
   redirect.
 
 ## B. Work known and not done
 
-- I6, the network with `env-uv` (the session `uv` proposed it on
-  2026-11-16, by choice of the author): `iup.atm` polls `uva_poll` at
-  each tick, through weak symbols. Done here; the test of the pair and
-  `iup-net` wait for the side of `uv`.
 - What to build (the author, 2026-11-14): all the examples of
-  `lua-atmos/env-iup` and also 7GUIs. Done: `hello`, `button-counter`,
-  and the seven tasks. Not done: `iup-net`, which needs the network
-  (`env-uv`, I6, to decide with the author).
+  `lua-atmos/env-iup` and also 7GUIs. All done.
 - The C versions of the study (`study/*.c`) are compiled and started,
   not tested: a script of actions for them would make the comparison
   of behavior a fact.
