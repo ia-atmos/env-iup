@@ -35,12 +35,7 @@ Kept current as items open and close.
 
 ## C. Reported and not acknowledged
 
-- To the compiler session (2026-11-15): the report of the migration
-  to the new rules of `pin` (an event built in C needs `a_born`; no
-  `vector.clear`; `vector.insert` does not evaluate to the element).
-- To the compiler session (2026-11-14): the modal dialog of the circle
-  drawer as a case for `grab` (issue 22 of `atmos-lang/atmos`); and
-  `e@1.d` does not compile (`1.d` reads as a number).
+- (none)
 
 ## D. Older items
 
