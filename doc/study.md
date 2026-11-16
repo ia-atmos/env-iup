@@ -38,10 +38,10 @@ other, function by function, and not from a test.
 | Temperature converter | 30 | 43 | 2 | 2 |
 | Flight booker | 63 | 63 | 2 | 2 |
 | Timer | 43 | 70 | 3 | 3 |
-| CRUD | 98 | 117 | 5 | 5 |
-| Circle drawer | 148 | 175 | 8 | 6, and 2 awaits in sequence |
+| CRUD | 95 | 117 | 5 | 5 |
+| Circle drawer | 147 | 175 | 8 | 6, and 2 awaits in sequence |
 | Cells | 168 | 228 | 2 | 1, and a task per formula |
-| Total | 566 | 721 | 23 | |
+| Total | 562 | 721 | 23 | |
 
 The Atmos versions have about 80% of the lines of the C ones. Most of
 the difference is not in the logic: C declares, converts, and creates
@@ -142,7 +142,7 @@ the others and of what came before.
   and does not.
 - **The rules of `pin`.** A handle is declared with `pin`, and a value
   created in a reaction for a collection of the program is built
-  inside the insert (the circle drawer). The C version has no such
+  inside the insert, which gives it back (the circle drawer). The C version has no such
   rule, and no protection either: the history points into an array.
 - **A popup of IUP cannot be called inside a reaction**, since it only
   returns when it closes. `iup.popup` defers it, and the program awaits
