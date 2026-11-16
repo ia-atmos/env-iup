@@ -64,6 +64,10 @@
 ;;      iup.draw(h, :arc, x1, y1, x2, y2 [, a1, a2])
 ;;      iup.draw(h, :text, str, x, y)
 ;;
+;; A program may also include the environment of the network, `uv.atm`
+;; of `ia-atmos/env-uv`, built with `-DUVA_NO_MAIN`: the loop is that of
+;; IUP, and the network is polled at each tick of the time (10ms).
+;;
 ;; Time passes inside the loop, so that `await 1s` works as usual. The
 ;; program terminates when its main chunk does, not when the last dialog
 ;; is closed.
@@ -634,6 +638,13 @@ static void ati_script (const char* s, int ms) {
 // DRIVER
 ///////////////////////////////////////////////////////////////////////////////
 
+// The environment of the network (`uv.atm` of `ia-atmos/env-uv`, built
+// with `-DUVA_NO_MAIN`), if the program includes it: this driver owns
+// the loop, and polls the network at each tick. The symbols are weak,
+// so that this file builds alone.
+AStatus uva_poll  (void) __attribute__((weak));
+void    uva_close (void) __attribute__((weak));
+
 static const char* ATI_SCRIPT = NULL;
 static int         ATI_MS     = 0;      // the virtual time of the script
 static int64_t     ATI_PRV    = 0;      // the real time of the last tick
@@ -662,6 +673,12 @@ static int ati_tick (Ihandle* t) {
     if (us>0 && !ATI_BUSY && !ATI_QUIT) {
         AVal evt = a_int(us);
         ati_emit(evt);
+        ati_drain();
+    }
+    if (uva_poll!=NULL && !ATI_BUSY && !ATI_QUIT && ATI_ST==A_OK && atm_alive()) {
+        ATI_BUSY++;
+        ATI_ST = uva_poll();
+        ATI_BUSY--;
         ati_drain();
     }
     ati_check();
@@ -722,6 +739,9 @@ int main (int argc, char** argv) {
         a_error_dump();
     }
     atm_quit();
+    if (uva_close != NULL) {
+        uva_close();
+    }
     IupClose();
     return (st == A_OK) ? 0 : 1;
 }
