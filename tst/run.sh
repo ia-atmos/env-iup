@@ -12,6 +12,10 @@
 #   tst/name.script                 the actions, one per line (optional)
 #   tst/name.out                    the expected output
 #
+# A program that includes `uv.atm` (the network, `ia-atmos/env-uv`) is
+# built with `-DUVA_NO_MAIN` and `-luv`, and is skipped if there is no
+# `../env-uv` or no headers of libuv.
+#
 # Requires `xvfb-run`, and `import` (ImageMagick) for the screenshots,
 # which go to `out/`. With `ATMOS_ASAN=1`, the programs run under the
 # address sanitizer. GTK and the libraries under it leak on their own,
@@ -37,7 +41,19 @@ for t in "$@"; do
         script=$(grep -v '^#' "tst/$t.script" | grep -v '^$' | paste -sd";" -)
     fi
     why=
-    if ! ./atmos-iup -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
+    # a program with the network of env-uv: its flags, or skip
+    flags=
+    libs=
+    if grep -q 'include ".*uv.atm"' "$prog"; then
+        if [ ! -f ../env-uv/uv.atm ] || [ ! -f /usr/include/uv.h ]; then
+            echo "SKIP $t    (needs ../env-uv and libuv with its headers)"
+            continue
+        fi
+        flags="-O1 -DUVA_NO_MAIN"
+        libs="-luv"
+    fi
+    if ! ATMOS_CFLAGS="${flags:-${ATMOS_CFLAGS:--O1}}" ATMOS_LDFLAGS="$libs" \
+            ./atmos-iup -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
         why="does not compile (see out/$t.log)"
     else
         GTK_THEME=Adwaita LSAN_OPTIONS=exitcode=0 IUP_ATM_SCRIPT="$script" \
