@@ -213,8 +213,9 @@ static Ihandle* ati_ptr (AVal v) {
 // born: it may hold a pinned handle, and cannot leave its block.
 static void ati_fld (AVal evt, const char* k, AVal v) {
     AVal key = a_strz(k);
-    a_born(evt, v);
-    a_setindex(evt, key, v);
+    if (a_tab_field(evt, key, v) != A_OK) {
+        fprintf(stderr, "iup : invalid field of an event : %s\n", k);
+    }
     a_dec(key);
     a_dec(v);
 }
