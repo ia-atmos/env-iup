@@ -55,10 +55,7 @@ func buttons () {
 func refresh () {
     val pre = iup.get(flt, "VALUE") || ""
     iup.set(lst, "REMOVEITEM", "ALL")
-    loop {
-        while #shown > 0
-        vector.remove(shown)
-    }
+    vector.clear(shown)
     loop i,p in db {
         if (#pre == 0) || (string.find(p.surname, pre) == 0) {
             iup.set(lst, "APPENDITEM", p.surname ++ ", " ++ p.name)
