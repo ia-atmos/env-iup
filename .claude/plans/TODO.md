@@ -11,6 +11,10 @@ Kept current as items open and close.
 
 ## B. Work known and not done
 
+- I6, the network with `env-uv` (the session `uv` proposed it on
+  2026-11-16, by choice of the author): `iup.atm` polls `uva_poll` at
+  each tick, through weak symbols. Done here; the test of the pair and
+  `iup-net` wait for the side of `uv`.
 - What to build (the author, 2026-11-14): all the examples of
   `lua-atmos/env-iup` and also 7GUIs. Done: `hello`, `button-counter`,
   and the seven tasks. Not done: `iup-net`, which needs the network
