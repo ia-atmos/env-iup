@@ -137,8 +137,7 @@ watching :close [h=dlg] {
             if e.press {
                 val c = find(e.x, e.y)
                 if (e.but == 1) && (c == nil) {
-                    vector.insert(cs, [x=e.x, y=e.y, d=40])
-                    val new = cs@(#cs-1)
+                    val new = vector.insert(cs, [x=e.x, y=e.y, d=40])
                     set over = new
                     record(:new [c=new])
                     iup.update(cnv)
