@@ -1,0 +1,5 @@
+echo	count 1
+echo	count 3
+txt.VALUE = 3
+closed
+exit 0

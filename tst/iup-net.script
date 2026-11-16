@@ -1,0 +1,6 @@
+500:click:but
+1500:click:but
+1600:click:but
+2500:get:txt:VALUE
+2600:shot:out/iup-net.png
+2700:close:dlg

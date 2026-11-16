@@ -1,0 +1,52 @@
+;; The counter of `button-counter`, with the network in the same program:
+;; each second, a client sends the count to an echo server and prints
+;; the answer. The GUI is of IUP and the network of libuv (`env-uv`): this
+;; environment owns the loop and the time, and polls libuv at each tick.
+;;
+;; It needs `uv.atm` of `ia-atmos/env-uv` beside this repository, and
+;; libuv with its headers:
+;;
+;;      ATMOS_CFLAGS="-DUVA_NO_MAIN -I$PWD/iup/include" \
+;;      ATMOS_LDFLAGS="-L$PWD/iup -liup -Wl,-rpath,$PWD/iup -luv" \
+;;          ../lang/atmos exs/iup-net.atm
+
+include "../iup.atm"
+include "../../env-uv/uv.atm"
+
+;; the server
+task Echo (s) {
+    loop {
+        val line = await uv.stream.line(s)
+        until line == nil
+        await uv.stream.write(s, line ++ "\n")
+    }
+}
+pin srv = uv.tcp.listen("127.0.0.1", 0)
+val ip, port = uv.tcp.addr(srv)
+spawn uv.tcp.serve(srv, Echo)
+
+;; the dialog
+pin txt = iup.new(:text,   [value=0, readonly=true, size=60, handlename="txt"])
+pin but = iup.new(:button, [title="Count", size=60, handlename="but"])
+pin dlg = iup.new(:dialog, [
+    title      = "Counter",
+    margin     = "10x10",
+    handlename = "dlg",
+    iup.new(:hbox, [txt, but, ngap=10]),
+])
+iup.show(dlg)
+
+watching :close [h=dlg] {
+    par {
+        loop on :action [h=but] {
+            iup.set(txt, "VALUE", tonumber(iup.get(txt, "VALUE")) + 1)
+        }
+    } with {
+        pin c = await uv.tcp.connect(ip, port)
+        loop on 1s {
+            await uv.stream.write(c, "count " ++ iup.get(txt, "VALUE") ++ "\n")
+            print("echo", (await uv.stream.line(c)))
+        }
+    }
+}
+print("closed")
