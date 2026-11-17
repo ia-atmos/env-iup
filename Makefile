@@ -10,7 +10,7 @@ $(IUP)/libiup.so:
 	./get-iup.sh
 
 # The compiler dedicated to the environment.
-atmos-iup: iup.atm $(IUP)/libiup.so $(LANG_DIR)/atmos
+atmos-iup: iup.atm $(IUP)/libiup.so $(LANG_DIR)/atmos $(LANG_DIR)/build/libatmos.a
 	$(MAKE) -s -C $(LANG_DIR) env OUT=$(CURDIR)/atmos-iup ENV=$(CURDIR)/iup.atm \
 	    ENV_CFLAGS="-I$(IUP)/include" \
 	    ENV_LDFLAGS="-L$(IUP) -liup -Wl,-rpath,$(IUP)"
