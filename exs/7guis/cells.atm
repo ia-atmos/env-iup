@@ -28,7 +28,7 @@ pin funcs = [
 ;; Throws `:Formula` if it is not well formed.
 func eval (src) {
     var pos = 0
-    pin deps = []
+    val deps = []
 
     val func peek () {
         loop {
@@ -87,7 +87,7 @@ func eval (src) {
             }
             set pos = pos + 1
             val c2, r2 = ref()
-            pin ns = []
+            val ns = []
             loop c in (c1, c2) {
                 loop r in (r1, r2) {
                     vector.insert(ns, cell(string.char(65+c) ++ r))
@@ -99,7 +99,7 @@ func eval (src) {
         if (f == nil) || (peek() != "(") {
             throw :Formula
         }
-        pin ns = []
+        val ns = []
         loop {
             set pos = pos + 1               ;; the `(` or the `,`
             loop _,n in expr() {
@@ -114,8 +114,8 @@ func eval (src) {
         [f(ns)]
     }
 
-    pin ok, ns = catch :Formula {
-        pin ns = expr()
+    val ok, ns = catch :Formula {
+        val ns = expr()
         if (#ns != 1) || (peek() != "") {
             throw :Formula
         }
@@ -135,7 +135,7 @@ func show (id) {
 ;; A cell with a formula.
 task Formula (id, src) {
     loop {
-        pin v, deps = eval(src)
+        val v, deps = eval(src)
         set vals@id = v
         show(id)
         emit @:global :cell [id=id]
