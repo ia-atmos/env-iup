@@ -5,10 +5,6 @@ Kept current as items open and close.
 
 ## A. Decisions waiting for the author
 
-- The rules of `pin` changed again (2026-11-17): `val`/`var` may hold
-  a fresh value, and `set` on a pinned place is allowed. Nothing broke
-  (13 tests pass against `b463c23`). Going back from `pin` to `val`
-  where the old code had it is allowed, not required: ask.
 - The versions in Lua of 7GUIs to compare with (asked 2026-11-16):
   none found in `lua-atmos` or `atmos-lang`. Where are they, or
   should they be written over `lua-atmos/env-iup`?
@@ -18,6 +14,10 @@ Kept current as items open and close.
 
 ## B. Work known and not done
 
+- `exs/iup-net.atm` fails with the rules of pin of 2026-11-17, in
+  `uv.atm` of `env-uv` (a pinned stream given away by
+  `uv_tcp_listen`). Reported to the session `uv`; rerun when it is
+  fixed. The other 12 tests pass.
 - What to build (the author, 2026-11-14): all the examples of
   `lua-atmos/env-iup` and also 7GUIs. All done.
 - The C versions of the study (`study/*.c`) are compiled and started,
