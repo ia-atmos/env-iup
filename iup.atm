@@ -190,13 +190,8 @@ static int ati_destroy_cb (Ihandle* h) {
 
 // The finalizer of a handle: destroys the control, unless it belongs to
 // a parent, which destroys it.
-static int ATI_CLOSED;
-
 static void ati_fin (void* ptr) {
     Ihandle* h = ptr;
-    if (ATI_CLOSED) {
-        return;                 // IUP destroyed everything when it closed
-    }
     ati_nat_set(h, NULL);
     if (IupGetParent(h) == NULL) {
         IupDestroy(h);
@@ -656,7 +651,6 @@ static void ati_script (const char* s, int ms) {
 static const char* ATI_SCRIPT  = NULL;
 static int         ATI_PRIMARY = 1;     // the mode of the environment
 static int         ATI_FIRST   = 1;     // the first step is to come
-static int         ATI_CLOSED  = 0;     // IUP was closed: no handle destroys
 static int         ATI_MS      = 0;     // the virtual time of the script
 static int64_t     ATI_PRV     = 0;     // the real time of the last tick
 static Ihandle*    ATI_TICKT   = NULL;
@@ -753,7 +747,6 @@ static void ati_quit (void) {
     }
     ATI_POPQ_N = 0;
     fflush(stdout);
-    ATI_CLOSED = 1;
     IupClose();
 }
 ```
@@ -813,7 +806,7 @@ atmos.env([
     mode = [primary=true, secondary=true],
     step = func () {
         var end
-        `$end = a_bool(ati_step()); if (ATI_ST != A_OK) { st = ATI_ST; ATI_ST = A_OK; }`
+        `$end = a_bool(ati_step());`
         end
     },
     quit = func () {
