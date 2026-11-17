@@ -35,7 +35,7 @@ Status: experimental. The plan is in
 |-|-|
 | `exs/hello.atm` | Only the time: a message every 500ms, for 5 seconds |
 | `exs/button-counter.atm` | The program above |
-| `exs/iup-net.atm` | The counter, with an echo client and server in the same program: the network is [`env-uv`][uv], polled by this environment at each tick |
+| `exs/iup-net.atm` | The counter, with an echo client and server in the same program: the network is [`env-uv`][uv], a secondary environment stepped after each step of this one |
 | `exs/7guis/counter.atm` | [7GUIs][7guis], task 1 |
 | `exs/7guis/temperature.atm` | Task 2: two fields that convert to each other |
 | `exs/7guis/flight.atm` | Task 3: constraints between a choice, two dates, and a button |

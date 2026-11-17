@@ -179,8 +179,16 @@ of that handle.
 
 ## Time and termination
 
-Time passes inside the loop of IUP, so `await 1s` and
-`loop dt on :clock` work as usual.
+The environment registers itself with `atmos.env` when `iup.atm` is
+included, and the runtime drives it. As the primary environment (the
+first one included), its step waits in the loop of IUP, at most 10ms,
+and gives the time to the program, so `await 1s` and
+`loop dt on :clock` work as usual. As a secondary environment, its step
+only processes what IUP has ready, and the time comes from the primary.
+
+Another environment may follow it in the same program, such as `uv.atm`
+of [`ia-atmos/env-uv`][uv] for the network (`exs/iup-net.atm`): its
+step runs after each step of IUP, so at most 10ms apart.
 
 The program terminates when its main chunk terminates, and not when
 the last dialog is closed: a program normally ends with a
@@ -216,3 +224,4 @@ The clicks and the moves are real events of the mouse. The others
 call the callbacks of IUP directly.
 
 [iup]: https://www.tecgraf.puc-rio.br/iup/
+[uv]: https://github.com/ia-atmos/env-uv
