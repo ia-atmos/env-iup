@@ -14,10 +14,6 @@ Kept current as items open and close.
 
 ## B. Work known and not done
 
-- `exs/iup-net.atm` fails with the rules of pin of 2026-11-17, in
-  `uv.atm` of `env-uv` (a pinned stream given away by
-  `uv_tcp_listen`). Reported to the session `uv`; rerun when it is
-  fixed. The other 12 tests pass.
 - What to build (the author, 2026-11-14): all the examples of
   `lua-atmos/env-iup` and also 7GUIs. All done.
 - The C versions of the study (`study/*.c`) are compiled and started,
