@@ -64,9 +64,13 @@
 ;;      iup.draw(h, :arc, x1, y1, x2, y2 [, a1, a2])
 ;;      iup.draw(h, :text, str, x, y)
 ;;
-;; A program may also include the environment of the network, `uv.atm`
-;; of `ia-atmos/env-uv`, built with `-DUVA_NO_MAIN`: the loop is that of
-;; IUP, and the network is polled at each tick of the time (10ms).
+;; The environment registers itself with `atmos.env`, in either mode. As
+;; the primary environment (the first one included), it waits in the loop
+;; of IUP and gives the time to the program. As a secondary one, it only
+;; processes what IUP has ready, and the time comes from the primary. A
+;; program may include another environment after this one, such as
+;; `uv.atm` of `ia-atmos/env-uv` (the network): each step of IUP is then
+;; followed by a step of the other.
 ;;
 ;; Time passes inside the loop, so that `await 1s` works as usual. The
 ;; program terminates when its main chunk does, not when the last dialog
@@ -186,8 +190,13 @@ static int ati_destroy_cb (Ihandle* h) {
 
 // The finalizer of a handle: destroys the control, unless it belongs to
 // a parent, which destroys it.
+static int ATI_CLOSED;
+
 static void ati_fin (void* ptr) {
     Ihandle* h = ptr;
+    if (ATI_CLOSED) {
+        return;                 // IUP destroyed everything when it closed
+    }
     ati_nat_set(h, NULL);
     if (IupGetParent(h) == NULL) {
         IupDestroy(h);
@@ -638,16 +647,19 @@ static void ati_script (const char* s, int ms) {
 // DRIVER
 ///////////////////////////////////////////////////////////////////////////////
 
-// The environment of the network (`uv.atm` of `ia-atmos/env-uv`, built
-// with `-DUVA_NO_MAIN`), if the program includes it: this driver owns
-// the loop, and polls the network at each tick. The symbols are weak,
-// so that this file builds alone.
-AStatus uva_poll  (void) __attribute__((weak));
-void    uva_close (void) __attribute__((weak));
+// The environment registers itself with `atmos.env` (see the end of this
+// file), and the generic `main` of the runtime calls its step. As the
+// primary environment, the step waits in the loop of IUP, and a timer
+// gives the time to the program. As a secondary one, the step only
+// processes what IUP has ready, and gives no time.
 
-static const char* ATI_SCRIPT = NULL;
-static int         ATI_MS     = 0;      // the virtual time of the script
-static int64_t     ATI_PRV    = 0;      // the real time of the last tick
+static const char* ATI_SCRIPT  = NULL;
+static int         ATI_PRIMARY = 1;     // the mode of the environment
+static int         ATI_FIRST   = 1;     // the first step is to come
+static int         ATI_CLOSED  = 0;     // IUP was closed: no handle destroys
+static int         ATI_MS      = 0;     // the virtual time of the script
+static int64_t     ATI_PRV     = 0;     // the real time of the last tick
+static Ihandle*    ATI_TICKT   = NULL;
 
 static int64_t ati_now (void) {
     struct timespec ts;
@@ -655,8 +667,9 @@ static int64_t ati_now (void) {
     return (int64_t)ts.tv_sec*1000000 + ts.tv_nsec/1000;
 }
 
-// The timer that lets the time pass in the program. In the test mode,
-// each tick is 10ms of virtual time, after the actions that are due.
+// The timer that lets the time pass in the program, as the primary
+// environment. In the test mode, each tick is 10ms of virtual time,
+// after the actions that are due.
 static int ati_tick (Ihandle* t) {
     (void) t;
     int64_t us = 0;
@@ -670,15 +683,9 @@ static int ati_tick (Ihandle* t) {
         us = now - ATI_PRV;
         ATI_PRV = now;
     }
-    if (us>0 && !ATI_BUSY && !ATI_QUIT) {
+    if (ATI_PRIMARY && us>0 && !ATI_BUSY && !ATI_QUIT) {
         AVal evt = a_int(us);
         ati_emit(evt);
-        ati_drain();
-    }
-    if (uva_poll!=NULL && !ATI_BUSY && !ATI_QUIT && ATI_ST==A_OK && atm_alive()) {
-        ATI_BUSY++;
-        ATI_ST = uva_poll();
-        ATI_BUSY--;
         ati_drain();
     }
     ati_check();
@@ -686,12 +693,17 @@ static int ati_tick (Ihandle* t) {
     return IUP_DEFAULT;
 }
 
-int main (int argc, char** argv) {
-    if (IupOpen(&argc, &argv) != IUP_NOERROR) {
+// Opens IUP, when the file is included: before the program creates its
+// controls. The main chunk runs as a reaction: the callbacks that it
+// provokes wait in the queue for the first step.
+static void ati_open (void) {
+    if (IupOpen(NULL, NULL) != IUP_NOERROR) {
         fprintf(stderr, "iup : cannot open the display\n");
-        return 1;
+        exit(1);
     }
-    ATI_SCRIPT = getenv("IUP_ATM_SCRIPT");
+    ATI_PRIMARY = (atm_nenvs == 0);
+    ATI_SCRIPT  = getenv("IUP_ATM_SCRIPT");
+    ATI_BUSY    = 1;
 
     // the loop ends with the program, not with the last dialog
     IupSetGlobal("LOCKLOOP", "YES");
@@ -700,52 +712,53 @@ int main (int argc, char** argv) {
     IupSetAttribute(ATI_POPT, "TIME", "1");
     IupSetCallback(ATI_POPT, "ACTION_CB", ati_pop_cb);
 
-    Ihandle* tick = IupTimer();
-    IupSetAttribute(tick, "TIME", (ATI_SCRIPT != NULL) ? "1" : "10");
-    IupSetCallback(tick, "ACTION_CB", ati_tick);
+    ATI_TICKT = IupTimer();
+    IupSetAttribute(ATI_TICKT, "TIME", (ATI_SCRIPT != NULL) ? "1" : "10");
+    IupSetCallback(ATI_TICKT, "ACTION_CB", ati_tick);
+}
 
-    atm_init(argc, argv);
-    ATI_BUSY++;
-    ATI_ST = atm_main();
-    ATI_BUSY--;
-
-    if (ATI_SCRIPT != NULL) {
-        ati_settle(200);        // the dialogs are on the screen
+// One step of the loop of IUP. Returns 1 if the program is over.
+static int ati_step (void) {
+    if (ATI_FIRST) {
+        ATI_FIRST = 0;
+        if (ATI_SCRIPT != NULL) {
+            ati_settle(200);        // the dialogs are on the screen
+        }
+        ATI_BUSY = 0;
+        ati_drain();
+        ATI_PRV = ati_now();
+        IupSetAttribute(ATI_TICKT, "RUN", "YES");
     }
-    ati_drain();
-    ATI_PRV = ati_now();
-    if (ATI_ST==A_OK && atm_alive()) {
-        IupSetAttribute(tick, "RUN", "YES");
-        IupMainLoop();
-        IupSetAttribute(tick, "RUN", "NO");
+    if (ATI_ST==A_OK && !ATI_QUIT && atm_alive()) {
+        if (ATI_PRIMARY) {
+            IupLoopStepWait();
+        } else {
+            IupLoopStep();
+            IupFlush();
+        }
     }
+    return ATI_QUIT || ATI_ST!=A_OK;
+}
 
+static void ati_quit (void) {
+    if (ATI_TICKT != NULL) {
+        IupSetAttribute(ATI_TICKT, "RUN", "NO");
+    }
     for (int i=0; i<ATI_QUEUE_N; i++) {
         a_dec(ATI_QUEUE[i]);
     }
+    ATI_QUEUE_N = 0;
     for (int i=0; i<ATI_POPQ_N; i++) {
         a_dec(ATI_POPQ[i].h);
     }
-
-    AStatus st = ATI_ST;
-    if (st == A_OK) {
-        st = atm_stop();
-    }
+    ATI_POPQ_N = 0;
     fflush(stdout);
-    if (st == A_ESCAPE) {
-        st = a_escape_err();
-    }
-    if (st != A_OK) {
-        a_error_dump();
-    }
-    atm_quit();
-    if (uva_close != NULL) {
-        uva_close();
-    }
+    ATI_CLOSED = 1;
     IupClose();
-    return (st == A_OK) ? 0 : 1;
 }
 ```
+
+`ati_open();`
 
 pin iup = [
     ;; iup.new(class, t): a control of the given class
@@ -793,3 +806,17 @@ pin iup = [
         `st = ati_draw($h, $op, $a, $b, $c, $d, $e, $f);`
     },
 ]
+
+;; The environment: the primary one waits in the loop of IUP and gives
+;; the time; a secondary one only processes what IUP has ready.
+atmos.env([
+    mode = [primary=true, secondary=true],
+    step = func () {
+        var end
+        `$end = a_bool(ati_step()); if (ATI_ST != A_OK) { st = ATI_ST; ATI_ST = A_OK; }`
+        end
+    },
+    quit = func () {
+        `ati_quit();`
+    },
+])
