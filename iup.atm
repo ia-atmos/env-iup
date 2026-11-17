@@ -695,7 +695,6 @@ static void ati_open (void) {
         fprintf(stderr, "iup : cannot open the display\n");
         exit(1);
     }
-    ATI_PRIMARY = (atm_nenvs == 0);
     ATI_SCRIPT  = getenv("IUP_ATM_SCRIPT");
     ATI_BUSY    = 1;
 
@@ -712,9 +711,10 @@ static void ati_open (void) {
 }
 
 // One step of the loop of IUP. Returns 1 if the program is over.
-static int ati_step (void) {
+static int ati_step (int primary) {
     if (ATI_FIRST) {
         ATI_FIRST = 0;
+        ATI_PRIMARY = primary;
         if (ATI_SCRIPT != NULL) {
             ati_settle(200);        // the dialogs are on the screen
         }
@@ -804,9 +804,10 @@ pin iup = [
 ;; the time; a secondary one only processes what IUP has ready.
 atmos.env([
     mode = [primary=true, secondary=true],
-    step = func () {
+    step = func (mode) {
+        val primary = (mode == :primary)
         var end
-        `$end = a_bool(ati_step());`
+        `$end = a_bool(ati_step(a_truthy($primary)));`
         end
     },
     quit = func () {
