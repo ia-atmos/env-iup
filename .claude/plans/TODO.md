@@ -14,13 +14,8 @@ Kept current as items open and close.
 
 ## B. Work known and not done
 
-- The interface of an environment in Atmos (the author, 2026-11-17,
-  session `envs`): done on this side (`944b9a9`): `iup.atm` registers
-  with `atmos.env`, primary or secondary, with no `main`. Waiting for
-  `uv.atm` to do the same; then rerun `iup-net` and the pair, drop
-  `-DUVA_NO_MAIN` from `tst/run.sh` and `exs/iup-net.atm`, update
-  `doc/api.md`, and report to `envs` and to the author. Later (item
-  58): the test mode by a global set in a `test` block.
+- Later (item 58 of `envs`): the test mode by a global set in a `test`
+  block of `iup.atm`, instead of `IUP_ATM_SCRIPT` alone.
 - What to build (the author, 2026-11-14): all the examples of
   `lua-atmos/env-iup` and also 7GUIs. All done.
 - The C versions of the study (`study/*.c`) are compiled and started,
