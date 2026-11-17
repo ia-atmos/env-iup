@@ -1,12 +1,14 @@
 ;; The counter of `button-counter`, with the network in the same program:
 ;; each second, a client sends the count to an echo server and prints
-;; the answer. The GUI is of IUP and the network of libuv (`env-uv`): this
-;; environment owns the loop and the time, and polls libuv at each tick.
+;; the answer. The GUI is of IUP and the network of libuv (`env-uv`): both
+;; register with `atmos.env`, IUP first as the primary (it waits and gives
+;; the time) and libuv as a secondary (it is stepped after each step of
+;; IUP, at most 10ms apart).
 ;;
 ;; It needs `uv.atm` of `ia-atmos/env-uv` beside this repository, and
 ;; libuv with its headers:
 ;;
-;;      ATMOS_CFLAGS="-DUVA_NO_MAIN -I$PWD/iup/include" \
+;;      ATMOS_CFLAGS="-I$PWD/iup/include" \
 ;;      ATMOS_LDFLAGS="-L$PWD/iup -liup -Wl,-rpath,$PWD/iup -luv" \
 ;;          ../lang/atmos exs/iup-net.atm
 

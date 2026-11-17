@@ -13,7 +13,7 @@
 #   tst/name.out                    the expected output
 #
 # A program that includes `uv.atm` (the network, `ia-atmos/env-uv`) is
-# built with `-DUVA_NO_MAIN` and `-luv`, and is skipped if there is no
+# built with `-luv`, and is skipped if there is no
 # `../env-uv` or no headers of libuv.
 #
 # Requires `xvfb-run`, and `import` (ImageMagick) for the screenshots,
@@ -49,7 +49,7 @@ for t in "$@"; do
             echo "SKIP $t    (needs ../env-uv and libuv with its headers)"
             continue
         fi
-        flags="-O1 -DUVA_NO_MAIN"
+        flags="-O1"
         libs="-luv"
     fi
     if ! ATMOS_CFLAGS="${flags:-${ATMOS_CFLAGS:--O1}}" ATMOS_LDFLAGS="$libs" \
