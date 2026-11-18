@@ -46,6 +46,9 @@ Kept current as items open and close.
 
 ## Context
 
+- Findings about `pin` go to the session `atmos-pin`
+  (session_011eECogSDhkVfyt7qme5DLh), with a small program; anything
+  else of the compiler to `atmos-lang` (session_011eECogKVQ7ZzmWCoMST2wK).
 - Repository: `ia-atmos/env-iup` (formerly `fsantanna/iup`).
 - Subject: an environment for graphical user interfaces in Atmos over the IUP
   library (Tecgraf/PUC-Rio), as a direct binding to its C API.
