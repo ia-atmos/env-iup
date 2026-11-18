@@ -3,44 +3,47 @@
 Everything pending in this session: explicit, unanswered, or unacknowledged.
 Kept current as items open and close.
 
+Items are `#N` (rule of the author, 2026-11-18): unique in this session,
+in order, never reused; from another session, `session#N`. The index is
+below; the sections refer to it.
+
+## Index
+
+| # | Title | State |
+|---|-------|-------|
+| #1 | The versions in Lua of 7GUIs to compare with | open, waits for the author |
+| #2 | The local remote points to `fsantanna/iup` | open, blocked by the session (pushes work by the redirect) |
+| #3 | The test mode by a global set in a `test` block (`envs` item 58) | open |
+| #4 | The C versions of the study are not driven by a script | open |
+| #5 | A real click on an item of a menu does nothing in the test mode | open, cause not found |
+| #6 | The flight booker shows its message in a label, not a dialog | open |
+| #7 | The cells: no double click to edit, no infix operators | open |
+| #8 | The keys (`K_ANY`) and the items of a list are not events | open |
+| #9 | The screenshots are saved and not compared | open |
+| #10 | The Mac and Windows: not supported / not tried | open |
+| #11 | `www.tecgraf.puc-rio.br` is not reachable from the container | open, informative |
+| #12 | What to build: all the examples of `lua-atmos/env-iup` and 7GUIs | closed, done |
+| #13 | The interface of an environment in Atmos (`atmos.env`), pilot with `env-uv` | closed, done |
+
 ## A. Decisions waiting for the author
 
-- The versions in Lua of 7GUIs to compare with (asked 2026-11-16):
-  none found in `lua-atmos` or `atmos-lang`. Where are they, or
-  should they be written over `lua-atmos/env-iup`?
-- The local remote still points to `fsantanna/iup`: the change to
-  `ia-atmos/env-iup` was blocked by the session. Pushes work by the
-  redirect.
+- #1: none found in `lua-atmos` or `atmos-lang` (asked 2026-11-16).
+  Where are they, or should they be written over `lua-atmos/env-iup`?
 
 ## B. Work known and not done
 
-- Later (item 58 of `envs`): the test mode by a global set in a `test`
-  block of `iup.atm`, instead of `IUP_ATM_SCRIPT` alone.
-- What to build (the author, 2026-11-14): all the examples of
-  `lua-atmos/env-iup` and also 7GUIs. All done.
-- The C versions of the study (`study/*.c`) are compiled and started,
-  not tested: a script of actions for them would make the comparison
-  of behavior a fact.
-- In the test mode, a real click on an item of a menu does nothing
-  (the item is highlighted and not activated; cause not found). The
-  action `act` calls the callback and unmaps the menu instead.
-- The flight booker shows its message in a label, not in a dialog.
-- The cells have no double click to edit (the focus does it), and the
-  formulas have functions only, no infix operators.
-- The callbacks of the keys (`K_ANY`) and of the items of a list with
-  arguments are not events yet.
-- The screenshots are saved and not compared: decide where the pixels
-  are stable.
-- The Mac: IUP 3.32 distributes binaries for Linux and Windows only;
-  the readme says Linux on x86-64. Windows is not tried.
-- `www.tecgraf.puc-rio.br` is not reachable from the container (the
-  documents of IUP): SourceForge is.
+- #3: instead of `IUP_ATM_SCRIPT` alone.
+- #4: a script of actions for them would make the comparison of behavior
+  a fact.
+- #5: the item is highlighted and not activated. The action `act` calls
+  the callback and unmaps the menu instead.
+- #8: today only `ACTION`, `VALUECHANGED_CB`, `CLOSE_CB`, `BUTTON_CB`,
+  `MOTION_CB`, and the focus.
+- #9: decide where the pixels are stable.
+- #10: IUP 3.32 distributes binaries for Linux and Windows only; the
+  readme says Linux on x86-64. Windows is not tried.
 
 ## C. Reported and not acknowledged
-
-- (none)
-
-## D. Older items
 
 - (none)
 
@@ -53,6 +56,4 @@ Kept current as items open and close.
 - Subject: an environment for graphical user interfaces in Atmos over the IUP
   library (Tecgraf/PUC-Rio), as a direct binding to its C API.
 - Related: `lua-atmos/env-iup` (same idea for the Lua runtime, over iup-lua).
-- Compiler: `ia-atmos/lang` (formerly `fsantanna/ceu-atmos`), branch `main`.
-  Defects, missing features, and doubts on the semantics go to the compiler
-  session, with a small program that reproduces them.
+- Compiler: `ia-atmos/lang`, branch `main`.
