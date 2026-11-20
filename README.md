@@ -38,7 +38,7 @@ Status: experimental. The plan is in
 | `exs/iup-net.atm` | The counter, with an echo client and server in the same program: the network is [`env-uv`][uv], a secondary environment stepped after each step of this one |
 | `exs/7guis/counter.atm` | [7GUIs][7guis], task 1 |
 | `exs/7guis/temperature.atm` | Task 2: two fields that convert to each other |
-| `exs/7guis/flight.atm` | Task 3: constraints between a choice, two dates, and a button |
+| `exs/7guis/flight.atm` | Task 3: constraints between a choice, two dates, and a button, and a modal dialog |
 | `exs/7guis/timer.atm` | Task 4: the time, a slider, and a reset, concurrently |
 | `exs/7guis/crud.atm` | Task 5: a filtered list with create, update, and delete |
 | `exs/7guis/circles.atm` | Task 6: a canvas, undo and redo, a menu, and a dialog that holds the main one |
@@ -94,6 +94,8 @@ callbacks (`study/`).
 | `:button [h,but,press,x,y,status]` | `BUTTON_CB` (a button of the mouse on a canvas) |
 | `:motion [h,x,y,status]` | `MOTION_CB` (the mouse moved on a canvas) |
 | `:focus [h,focus]` | `GETFOCUS_CB` and `KILLFOCUS_CB` |
+| `:key [h,code,char]` | `K_ANY` (a key in a control) |
+| `:action [h,text,item,state]` | `ACTION` of a list (an item selected or unselected) |
 | `:popup [h]` | A popup was closed |
 
 An event is emitted inside its callback, so the program reacts before
@@ -113,7 +115,8 @@ make test
 Each test is a program under a script of actions at given times (press
 this button, set this value, close this dialog, save the screen), with
 no person and no screen (`xvfb-run`), and with a virtual time. Its
-output is compared with what is expected. They run plain and under the
+output and its screenshots are compared with what is expected (the
+screenshots pixel by pixel, in `tst/shots`). They run plain and under the
 address sanitizer. `make i0` is the first check of the plan: a program
 in C that opens a dialog and presses its button.
 
