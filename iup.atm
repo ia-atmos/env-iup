@@ -775,13 +775,13 @@ static int ati_tick (Ihandle* t) {
         us = now - ATI_PRV;
         ATI_PRV = now;
     }
-    // the time in the unit of the build (`A_TIME_US` microseconds), with
+    // the time in the unit of the build (`A_CLOCK_US` microseconds), with
     // what is left for the next tick
     static int64_t rest = 0;
     rest += us;
-    AInt dt = (AInt) (rest / A_TIME_US);
+    AInt dt = (AInt) (rest / A_CLOCK_US);
     if (ATI_PRIMARY && dt>0 && !ATI_BUSY && !ATI_QUIT) {
-        rest -= (int64_t)dt * A_TIME_US;
+        rest -= (int64_t)dt * A_CLOCK_US;
         AVal evt = a_int(dt);
         ati_emit(evt);
         ati_drain();
