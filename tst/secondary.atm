@@ -1,0 +1,38 @@
+;; IUP as a secondary environment: a primary written here registers
+;; first and gives the time (1ms of time at each of its steps); IUP only
+;; processes what it has ready, and gives no time. Built with the plain
+;; compiler and the `include` (see tst/run.sh).
+
+var steps = 0
+atmos.env([
+    mode = [primary=true],
+    step = func (mode) {
+        set steps = steps + 1
+        emit(`:number 1000 / A_TIME_US`)        ;; 1ms
+        false
+    },
+    quit = func () {
+        print("quit primary")
+    },
+])
+
+include "../iup.atm"
+
+pin but = iup.new(:button, [title="Count", handlename="but"])
+pin dlg = iup.new(:dialog, [title="Secondary", handlename="dlg", but])
+iup.show(dlg)
+
+par :any {
+    watching :close [h=dlg] {
+        var n = 0
+        loop on :action [h=but] {
+            set n = n + 1
+            print("click", n)
+        }
+    }
+} with {
+    await 10min
+    print("timeout")
+}
+await 100ms                 ;; the time of the primary
+print("100ms", steps > 100)
