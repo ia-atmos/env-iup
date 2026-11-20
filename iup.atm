@@ -105,9 +105,15 @@
 ;;                              called, and the menu is closed)
 ;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
 ;;      ms:shot:file.png        saves the screen (needs `import`)
+;;
+;; The clicks and the moves are real events of X, through the extension
+;; XTest of the server (`Xvfb` has it), if `libXtst` is there; else they
+;; are the events that IUP synthesizes, which a menu of GTK ignores.
 ;;      ms:quit                 terminates the program
 
 ```:prelude
+#define _GNU_SOURCE
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -592,6 +598,43 @@ static int ati_call (Ihandle* h, const char* cb) {
     return (f == NULL) ? IUP_DEFAULT : f(h);
 }
 
+// The mouse through the extension XTest of the server, when there is one:
+// real events of X, which GTK takes as those of a person. The events
+// that IUP synthesizes (`MOUSEBUTTON`) have no device, and a menu of GTK
+// ignores them. The library is opened when the program runs, so that the
+// environment does not depend on it. `press`: 1 press, 0 release, -1 only
+// move, 2 the press of a double click.
+static int ati_xtest (int x, int y, int but, int press) {
+    typedef int (*FMotion) (void*, int, int, int, unsigned long);
+    typedef int (*FButton) (void*, unsigned int, int, unsigned long);
+    typedef int (*FFlush)  (void*);
+    static int      ok = -1;
+    static FMotion  motion;
+    static FButton  button;
+    static FFlush   flush;
+    if (ok == -1) {
+        void* xt = dlopen("libXtst.so.6", RTLD_LAZY);
+        void* x11 = dlopen("libX11.so.6", RTLD_LAZY);
+        motion = xt  ? (FMotion) dlsym(xt, "XTestFakeMotionEvent") : NULL;
+        button = xt  ? (FButton) dlsym(xt, "XTestFakeButtonEvent") : NULL;
+        flush  = x11 ? (FFlush)  dlsym(x11, "XFlush")              : NULL;
+        ok = (motion!=NULL && button!=NULL && flush!=NULL && IupGetGlobal("XDISPLAY")!=NULL);
+    }
+    if (!ok) {
+        return 0;
+    }
+    void* dpy = (void*) IupGetGlobal("XDISPLAY");
+    motion(dpy, -1, x, y, 0);
+    flush(dpy);
+    ati_settle(20);
+    if (press != -1) {
+        button(dpy, (unsigned) but, press != 0, 0);
+        flush(dpy);
+        ati_settle(20);
+    }
+    return 1;
+}
+
 // A press or a release of a button of the mouse at a position of a
 // control (its center, by default).
 static void ati_mouse (Ihandle* h, const char* pos, int but, int press) {
@@ -604,6 +647,9 @@ static void ati_mouse (Ihandle* h, const char* pos, int but, int press) {
     } else {
         x += w/2;
         y += hh/2;
+    }
+    if (ati_xtest(x, y, but, press)) {
+        return;
     }
     IupSetfAttribute(NULL, "CURSORPOS", "%dx%d", x, y);
     ati_settle(20);
@@ -650,7 +696,7 @@ static void ati_script (const char* s, int ms) {
             } else if (!strcmp(act, "dclick")) {
                 ati_mouse(h, val, 1, 1);
                 ati_mouse(h, val, 1, 0);
-                ati_mouse(h, val, 1, 2);    // the double click
+                ati_mouse(h, val, 1, 2);    // the double click (IUP), or a press
                 ati_mouse(h, val, 1, 0);
             } else if (!strcmp(act, "rclick")) {
                 ati_mouse(h, val, 3, 1);
