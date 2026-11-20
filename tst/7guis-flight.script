@@ -3,6 +3,7 @@
 50:get:but:ACTIVE
 100:click:but
 150:get:msg:TITLE
+170:click:ok
 # a date that is not well formed
 200:set:t1:VALUE=31.02.2014
 210:get:t1:BGCOLOR
@@ -21,6 +22,9 @@
 360:set:t2:VALUE=29.02.2016
 370:get:but:ACTIVE
 400:click:but
+450:get:box:VISIBLE
 450:get:msg:TITLE
 500:shot:out/7guis-flight.png
-600:close:dlg
+550:click:ok
+600:get:box:VISIBLE
+700:close:dlg

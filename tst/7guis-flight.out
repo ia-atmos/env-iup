@@ -10,5 +10,7 @@ but.ACTIVE = NO
 t2.BGCOLOR = 255 0 0
 but.ACTIVE = NO
 but.ACTIVE = YES
+box.VISIBLE = YES
 msg.TITLE = You have booked a return flight on 28.02.2014 and 29.02.2016.
+box.VISIBLE = NO
 exit 0

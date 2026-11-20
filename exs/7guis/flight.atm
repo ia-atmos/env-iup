@@ -2,7 +2,8 @@
 ;; A choice between a one-way and a return flight, two dates, and a
 ;; button to book. The date of the return is only enabled for a return
 ;; flight. A date that is not well formed is red and disables the
-;; button, and so does a return before the departure.
+;; button, and so does a return before the departure. A booking is
+;; confirmed in a modal dialog.
 
 ;; The date `dd.mm.yyyy` as a number that can be compared, or nil.
 func date (s) {
@@ -33,12 +34,21 @@ iup.set(cmb, "VALUE", 1)
 pin t1  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t1"])
 pin t2  = iup.new(:text,   [value="27.03.2014", size=90, handlename="t2"])
 pin but = iup.new(:button, [title="Book", size=90, handlename="but"])
-pin msg = iup.new(:label,  [title="", size=260, handlename="msg"])
 pin dlg = iup.new(:dialog, [
     title      = "Book Flight",
     margin     = "10x10",
     handlename = "dlg",
-    iup.new(:vbox, [cmb, t1, t2, but, msg, ngap=5]),
+    iup.new(:vbox, [cmb, t1, t2, but, ngap=5]),
+])
+
+;; the confirmation
+pin msg = iup.new(:label,  [title="", size=260, handlename="msg"])
+pin ok  = iup.new(:button, [title="OK", size=40, handlename="ok"])
+pin box = iup.new(:dialog, [
+    title      = "Booked",
+    margin     = "10x10",
+    handlename = "box",
+    iup.new(:vbox, [msg, ok, ngap=10, alignment="ACENTER"]),
 ])
 iup.show(dlg)
 
@@ -69,6 +79,12 @@ watching :close [h=dlg] {
             } else {
                 iup.set(msg, "TITLE", "You have booked a one-way flight on "
                     ++ t ++ ".")
+            }
+            iup.popup(box)              ;; holds the main dialog
+            watching :popup [h=box] {
+                await :action [h=ok]
+                iup.hide(box)
+                await false
             }
         }
     }
