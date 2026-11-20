@@ -224,8 +224,12 @@ IUP_ATM_SCRIPT="100:click:but;200:get:txt:VALUE;300:close:dlg" \
     xvfb-run -a ./atmos-iup exs/button-counter.atm
 ```
 
-The clicks and the moves are real events of the mouse. The others
-call the callbacks of IUP directly.
+The clicks and the moves are real events of X, through the extension
+XTest of the server (`Xvfb` has it), when `libXtst` is installed: GTK
+takes them as those of a person, and an item of a menu can be clicked.
+Without it they are the events that IUP synthesizes, which a menu of GTK
+ignores (then `act` chooses an item). The other actions call the
+callbacks of IUP directly.
 
 [iup]: https://www.tecgraf.puc-rio.br/iup/
 [uv]: https://github.com/ia-atmos/env-uv
