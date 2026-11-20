@@ -28,13 +28,18 @@
 ;; the controls as events, each with the handle of its control:
 ;;
 ;;      :action [h]             `ACTION` (a button was pressed, a canvas
-;;                              must be drawn, ...)
+;;                              must be drawn, ...); for a list,
+;;                              `:action [h,text,item,state]`, an item that
+;;                              was selected or unselected (from 1)
 ;;      :value  [h]             `VALUECHANGED_CB` (a text was edited, ...)
 ;;      :close  [h]             `CLOSE_CB` (a dialog was closed)
 ;;      :button [h,but,press,x,y,status]
 ;;                              `BUTTON_CB` (a button of the mouse, `1` to
 ;;                              `3`, was pressed or released on a canvas)
 ;;      :motion [h,x,y,status]  `MOTION_CB` (the mouse moved on a canvas)
+;;      :key    [h,code,char]   `K_ANY` (a key was pressed in a control: its
+;;                              code in IUP, `K_*` of iupkey.h, and the
+;;                              character if it is printable)
 ;;      :focus  [h,focus]       `GETFOCUS_CB` and `KILLFOCUS_CB` (a control
 ;;                              got or lost the focus of the keyboard)
 ;;      :popup  [h]             a popup was closed
@@ -93,6 +98,8 @@
 ;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
 ;;                              (the `VALUECHANGED_CB` is called)
 ;;      ms:get:name:ATTR        prints an attribute, as `name.ATTR = value`
+;;      ms:key:name:c           gives the focus to a control and presses a
+;;                              key: a character, or a code (`0xFF1B`)
 ;;      ms:act:name             chooses an item of a menu (its `ACTION` is
 ;;                              called, and the menu is closed)
 ;;      ms:close:name           closes a dialog (the `CLOSE_CB` is called)
@@ -108,6 +115,7 @@
 #include <unistd.h>
 #include <iup.h>
 #include <iupdraw.h>
+#include <iupkey.h>
 
 static const char* ATI_KIND = "iup.handle";
 
@@ -315,6 +323,32 @@ static int ati_cb_killfocus (Ihandle* h) {
     return ati_focus(h, 0, "KILLFOCUS_CB");
 }
 
+// A key: its code in IUP (`K_*` of iupkey.h), and the character if it
+// is printable.
+static int ati_cb_key (Ihandle* h, int c) {
+    AVal evt = ati_evt("key", h);
+    ati_fld(evt, "code", a_int(c));
+    if (iup_isprint(c)) {
+        char s[2] = { (char)c, '\0' };
+        ati_fld(evt, "char", a_strz(s));
+    }
+    int ret = ati_ret(h, "K_ANY");
+    ati_fire(evt);
+    return ret;
+}
+
+// The `ACTION` of a list has the item: an item that is selected or
+// unselected (1 from the first).
+static int ati_cb_list (Ihandle* h, char* text, int item, int state) {
+    AVal evt = ati_evt("action", h);
+    ati_fld(evt, "text",  a_strz(text));
+    ati_fld(evt, "item",  a_int(item));
+    ati_fld(evt, "state", a_bool(state));
+    int ret = ati_ret(h, "ACTION");
+    ati_fire(evt);
+    return ret;
+}
+
 static const struct { const char* cb; Icallback f; } ATI_CBS[] = {
     { "ACTION",          (Icallback) ati_cb_action },
     { "VALUECHANGED_CB", (Icallback) ati_cb_value  },
@@ -323,6 +357,7 @@ static const struct { const char* cb; Icallback f; } ATI_CBS[] = {
     { "MOTION_CB",       (Icallback) ati_cb_motion },
     { "GETFOCUS_CB",     (Icallback) ati_cb_getfocus  },
     { "KILLFOCUS_CB",    (Icallback) ati_cb_killfocus },
+    { "K_ANY",           (Icallback) ati_cb_key       },
 };
 #define ATI_CBS_N ((int)(sizeof(ATI_CBS)/sizeof(ATI_CBS[0])))
 
@@ -393,6 +428,9 @@ static AStatus ati_new (AVal* dst, AVal cls, AVal t) {
     IupSetCallback(ih, "DESTROY_CB", ati_destroy_cb);
     for (int i=0; i<ATI_CBS_N; i++) {
         IupSetCallback(ih, ATI_CBS[i].cb, ATI_CBS[i].f);
+    }
+    if (!strcmp(IupGetClassName(ih), "list")) {
+        IupSetCallback(ih, "ACTION", (Icallback) ati_cb_list);
     }
     AStatus st = A_OK;
     if (t.type == A_TAB) {
@@ -623,6 +661,14 @@ static void ati_script (const char* s, int ms) {
             } else if (!strcmp(act, "get") && val!=NULL) {
                 const char* v = IupGetAttribute(h, val);
                 printf("%s.%s = %s\n", arg, val, (v==NULL) ? "nil" : v);
+            } else if (!strcmp(act, "key") && val!=NULL) {
+                int c = (strlen(val) == 1) ? (unsigned char)val[0] : (int)strtol(val, NULL, 0);
+                if (IupGetFocus() != h) {
+                    IupSetFocus(h);     // which selects the text of a field
+                    ati_settle(20);
+                }
+                IupSetInt(NULL, "KEY", c);
+                ati_settle(20);
             } else if (!strcmp(act, "act")) {
                 ati_call(h, "ACTION");
                 Ihandle* m = IupGetParent(h);
