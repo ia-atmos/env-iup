@@ -3,13 +3,22 @@
 ;; processes what it has ready, and gives no time. Built with the plain
 ;; compiler and the `include` (see tst/run.sh).
 
+```:prelude
+#include <time.h>
+static double tst_now (void) {          // real time, in milliseconds
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec*1e3 + ts.tv_nsec/1e6;
+}
+```
+
 var steps = 0
 atmos.env([
     mode = [primary=true],
     step = func (mode) {
         set steps = steps + 1
         emit(`:number 1000 / A_TIME_US`)        ;; 1ms
-        false
+        steps > 100000                          ;; a bound, never reached
     },
     quit = func () {
         print("quit primary")
@@ -34,5 +43,9 @@ par :any {
     await 10min
     print("timeout")
 }
-await 100ms                 ;; the time of the primary
-print("100ms", steps > 100)
+;; 100ms of the time of the primary: 100 steps of each environment. If
+;; the step of IUP waited (10ms as a primary), they would take a second.
+val t0 = `:number tst_now()`
+await 100ms
+val dt = `:number tst_now()` - t0
+print("100ms", steps > 100, dt < 500)

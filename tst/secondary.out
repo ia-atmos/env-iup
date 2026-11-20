@@ -1,5 +1,5 @@
 click	1
 click	2
-100ms	true
+100ms	true	true
 quit primary
 exit 0
