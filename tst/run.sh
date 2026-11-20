@@ -12,6 +12,10 @@
 #   tst/name.script                 the actions, one per line (optional)
 #   tst/name.out                    the expected output
 #
+# A program that calls `atmos.env` itself, before it includes `iup.atm`
+# (IUP as a secondary environment), is built with the plain compiler of
+# `../lang` (or `LANG_DIR`).
+#
 # A program that includes `uv.atm` (the network, `ia-atmos/env-uv`) is
 # built with `-luv`, and is skipped if there is no
 # `../env-uv` or no headers of libuv.
@@ -30,6 +34,8 @@ if [ $# -eq 0 ]; then
 fi
 
 mkdir -p out
+LANG_DIR=${LANG_DIR:-$(cd ../lang 2>/dev/null && pwd)}
+IUP=$PWD/iup
 pass=0
 fail=0
 for t in "$@"; do
@@ -52,8 +58,16 @@ for t in "$@"; do
         flags="-O1"
         libs="-luv"
     fi
+    # a program that registers an environment before it includes
+    # `iup.atm` (IUP as a secondary): the plain compiler and the include
+    cc=./atmos-iup
+    if grep -q '^atmos.env(' "$prog"; then
+        cc=$LANG_DIR/atmos
+        flags="${flags:-${ATMOS_CFLAGS:--O1}} -I$IUP/include"
+        libs="$libs -L$IUP -liup -Wl,-rpath,$IUP"
+    fi
     if ! ATMOS_CFLAGS="${flags:-${ATMOS_CFLAGS:--O1}}" ATMOS_LDFLAGS="$libs" \
-            ./atmos-iup -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
+            $cc -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
         why="does not compile (see out/$t.log)"
     else
         GTK_THEME=Adwaita LSAN_OPTIONS=exitcode=0 IUP_ATM_SCRIPT="$script" \
