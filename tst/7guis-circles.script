@@ -7,7 +7,8 @@
 350:shot:out/7guis-circles-1.png
 # the diameter of the first one
 400:rclick:cnv:100,100
-500:act:item
+# a real click on the item of the menu, which opens under the mouse
+500:click:cnv:130,116
 600:get:adj:VISIBLE
 600:get:dlg:ACTIVE
 700:set:sld:VALUE=120
