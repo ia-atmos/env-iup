@@ -124,6 +124,12 @@
 #include <iupdraw.h>
 #include <iupkey.h>
 
+// The unit of the clock of the build, by its name before and after the
+// rename of the numeric options of the compiler (lang branch `float`).
+#ifndef A_CLOCK_US
+#define A_CLOCK_US A_TIME_US
+#endif
+
 static const char* ATI_KIND = "iup.handle";
 
 // The slot of a control that points back to its native value. It is
