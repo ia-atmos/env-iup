@@ -18,7 +18,7 @@ below; the sections refer to it.
 | #5 | A real click on an item of a menu does nothing in the test mode | open, cause not found |
 | #6 | The flight booker shows its message in a label, not a dialog | done: a modal dialog (`iup.popup`) |
 | #7 | The cells: no double click to edit, no infix operators | open |
-| #8 | The keys (`K_ANY`) and the items of a list are not events | open |
+| #8 | The keys (`K_ANY`) and the items of a list are not events | done: `:key` and the item of a list in `:action` |
 | #9 | The screenshots are saved and not compared | open |
 | #10 | The Mac and Windows: not supported / not tried | open |
 | #11 | `www.tecgraf.puc-rio.br` is not reachable from the container | open, informative |
