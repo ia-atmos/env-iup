@@ -13,7 +13,7 @@ below; the sections refer to it.
 |---|-------|-------|
 | #1 | The versions in Lua of 7GUIs to compare with | open, waits for the author |
 | #2 | The local remote points to `fsantanna/iup` | open, blocked by the session (pushes work by the redirect) |
-| #3 | The test mode by a global set in a `test` block (`envs` item 58) | open |
+| #3 | The test mode by a global set in a `test` block (`envs` item 58) | open: waits for the shape that env-sdl sets first (atmos-envs#3); nothing prepared |
 | #4 | The C versions of the study are not driven by a script | open |
 | #5 | A real click on an item of a menu does nothing in the test mode | done: the events that IUP synthesizes have no device of GDK, and a menu of GTK ignores them; the clicks now go through XTest |
 | #6 | The flight booker shows its message in a label, not a dialog | done: a modal dialog (`iup.popup`) |
