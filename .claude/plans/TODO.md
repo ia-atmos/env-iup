@@ -24,6 +24,7 @@ below; the sections refer to it.
 | #11 | `www.tecgraf.puc-rio.br` is not reachable from the container | open, informative |
 | #12 | What to build: all the examples of `lua-atmos/env-iup` and 7GUIs | closed, done |
 | #13 | The interface of an environment in Atmos (`atmos.env`), pilot with `env-uv` | closed, done |
+| #14 | The numeric options of the build (`ATMOS_REAL=float`, `ATMOS_INT=32`, `ATMOS_TIME=ms`): `iup.atm` assumes the defaults (time in µs, `int64_t`, `double`) | open, waits for `atmos-float#14` |
 
 ## A. Decisions waiting for the author
 
