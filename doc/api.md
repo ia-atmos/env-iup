@@ -208,6 +208,7 @@ control is given by its `HANDLENAME`.
 | Action | |
 |--------|-|
 | `ms:click:name[:x,y]` | Presses and releases the left button of the mouse on a control, at its center or at a position inside it |
+| `ms:dclick:name[:x,y]` | A double click of the left button |
 | `ms:rclick:name[:x,y]` | The same with the right button |
 | `ms:move:name[:x,y]` | Moves the mouse |
 | `ms:set:name:ATTR=value` | Sets an attribute as if the user did it: the `VALUECHANGED_CB` is called |
