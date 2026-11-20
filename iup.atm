@@ -93,6 +93,7 @@
 ;;      ms:click:name[:x,y]     presses and releases the left button of the
 ;;                              mouse on a control (at its center, or at a
 ;;                              position inside it)
+;;      ms:dclick:name[:x,y]    a double click of the left button
 ;;      ms:rclick:name[:x,y]    the same with the right button
 ;;      ms:move:name[:x,y]      moves the mouse
 ;;      ms:set:name:ATTR=value  sets an attribute, as if the user did it
@@ -645,6 +646,11 @@ static void ati_script (const char* s, int ms) {
                 fprintf(stderr, "iup : no control named %s\n", arg);
             } else if (!strcmp(act, "click")) {
                 ati_mouse(h, val, 1, 1);
+                ati_mouse(h, val, 1, 0);
+            } else if (!strcmp(act, "dclick")) {
+                ati_mouse(h, val, 1, 1);
+                ati_mouse(h, val, 1, 0);
+                ati_mouse(h, val, 1, 2);    // the double click
                 ati_mouse(h, val, 1, 0);
             } else if (!strcmp(act, "rclick")) {
                 ati_mouse(h, val, 3, 1);
