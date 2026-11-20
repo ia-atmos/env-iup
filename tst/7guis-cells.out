@@ -9,4 +9,5 @@ B0.VALUE = =sum(A0:A1)
 B0.VALUE = hello
 B1.VALUE = #ERR
 C1.VALUE = #ERR
+A1.READONLY = YES
 exit 0

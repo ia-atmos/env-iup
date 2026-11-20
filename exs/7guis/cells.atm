@@ -2,9 +2,9 @@
 ;; A spreadsheet with the columns A to Z and the rows 0 to 99. A cell
 ;; holds a number, a text, or a formula that starts with `=`: a number,
 ;; a cell (`B3`), or a function over numbers, cells, and ranges
-;; (`=sum(A0:A9)`, `=div(B1, add(A0, 2))`). The cell with the focus shows
-;; its formula, and the others show their values. A change propagates to
-;; the cells that depend on it.
+;; (`=sum(A0:A9)`, `=div(B1, add(A0, 2))`). A double click on a cell edits
+;; its formula, until the cell loses the focus; the others show their
+;; values. A change propagates to the cells that depend on it.
 ;;
 ;; Each formula is a task: it computes its value, tells that it changed,
 ;; and awaits a change in a cell that it reads.
@@ -12,7 +12,7 @@
 pin srcs = []           ;; id -> what the user typed
 pin vals = []           ;; id -> the value: a number, a text, or nil
 pin hs   = []           ;; id -> the control
-var focus = nil         ;; the id of the cell with the focus
+var focus = nil         ;; the id of the cell that is edited
 
 ;; The functions of the formulas, over a vector of numbers.
 pin funcs = [
@@ -151,7 +151,7 @@ loop r in 100 {
     vector.insert(kids, iup.new(:label, [title=r]))
     loop c in 26 {
         val id = string.char(65+c) ++ r
-        set hs@id = iup.new(:text, [size=40, cell=id, handlename=id])
+        set hs@id = iup.new(:text, [size=40, readonly=true, cell=id, handlename=id])
         vector.insert(kids, hs@id)
     }
 }
@@ -171,16 +171,23 @@ pin ts  = tasks()       ;; the formulas
 pin run = []            ;; id -> the task of its formula
 
 watching :close [h=dlg] {
-    loop e on :focus {
-        val id = iup.get(e.h, "CELL")
-        if id == nil {
-            ;; not a cell
-        } else {
-            if e.focus {
+    par {
+        ;; a double click edits the formula of a cell
+        loop e on :button {
+            val id = iup.get(e.h, "CELL")
+            if id && e.press && (e.but == 1) && (string.sub(e.status, 5, 5) == "D") {
                 set focus = id
+                iup.set(e.h, "READONLY", false)
                 iup.set(e.h, "VALUE", srcs@id || "")
-            } else {
+            }
+        }
+    } with {
+        ;; the edition ends when the cell loses the focus
+        loop e on :focus {
+            val id = iup.get(e.h, "CELL")
+            if id && !e.focus && (id == focus) {
                 set focus = nil
+                iup.set(e.h, "READONLY", true)
                 val src = iup.get(e.h, "VALUE") || ""
                 if src != (srcs@id || "") {
                     set srcs@id = src
