@@ -123,6 +123,8 @@ are set in every control that `iup.new` creates.
 | Event | Callback of IUP | |
 |-------|-----------------|-|
 | `:action [h]` | `ACTION` | A button was pressed, an item of a menu was chosen, a canvas must be drawn |
+| `:action [h,text,item,state]` | `ACTION` of a list | An item (from 1) was selected (`state` is `true`) or unselected |
+| `:key [h,code,char]` | `K_ANY` | A key was pressed in a control: its code in IUP (`K_*` of `iupkey.h`), and the character if it is printable |
 | `:value [h]` | `VALUECHANGED_CB` | The user changed a text, a list, a slider |
 | `:close [h]` | `CLOSE_CB` | The user closed a dialog |
 | `:button [h,but,press,x,y,status]` | `BUTTON_CB` | A button of the mouse (`but` from `1` to `3`) was pressed (`press` is `true`) or released on a canvas |
@@ -210,6 +212,7 @@ control is given by its `HANDLENAME`.
 | `ms:move:name[:x,y]` | Moves the mouse |
 | `ms:set:name:ATTR=value` | Sets an attribute as if the user did it: the `VALUECHANGED_CB` is called |
 | `ms:get:name:ATTR` | Prints an attribute, as `name.ATTR = value` |
+| `ms:key:name:c` | Gives the focus to a control (if it has not) and presses a key: a character, or a code such as `0xFF1B` |
 | `ms:act:name` | Chooses an item of a menu: its `ACTION` is called, and the menu is closed |
 | `ms:close:name` | Closes a dialog: the `CLOSE_CB` is called |
 | `ms:shot:file.png` | Saves the screen (needs `import`, of ImageMagick) |
