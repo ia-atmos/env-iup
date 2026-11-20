@@ -19,7 +19,7 @@ below; the sections refer to it.
 | #6 | The flight booker shows its message in a label, not a dialog | done: a modal dialog (`iup.popup`) |
 | #7 | The cells: no double click to edit, no infix operators | done: a double click edits; the formulas keep functions only, as the 7GUIs reference does (by the session, to be confirmed) |
 | #8 | The keys (`K_ANY`) and the items of a list are not events | done: `:key` and the item of a list in `:action` |
-| #9 | The screenshots are saved and not compared | open |
+| #9 | The screenshots are saved and not compared | done: the animations of GTK off, references in `tst/shots`, identical pixel by pixel (stable in this container; another machine with other fonts records its own) |
 | #10 | The Mac and Windows: not supported / not tried | open |
 | #11 | `www.tecgraf.puc-rio.br` is not reachable from the container | open, informative |
 | #12 | What to build: all the examples of `lua-atmos/env-iup` and 7GUIs | closed, done |
@@ -37,11 +37,6 @@ below; the sections refer to it.
 - #3: instead of `IUP_ATM_SCRIPT` alone.
 - #4: a script of actions for them would make the comparison of behavior
   a fact.
-- #5: the item is highlighted and not activated. The action `act` calls
-  the callback and unmaps the menu instead.
-- #8: today only `ACTION`, `VALUECHANGED_CB`, `CLOSE_CB`, `BUTTON_CB`,
-  `MOTION_CB`, and the focus.
-- #9: decide where the pixels are stable.
 - #10: IUP 3.32 distributes binaries for Linux and Windows only; the
   readme says Linux on x86-64. Windows is not tried.
 
