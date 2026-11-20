@@ -20,8 +20,11 @@
 # built with `-luv`, and is skipped if there is no
 # `../env-uv` or no headers of libuv.
 #
-# Requires `xvfb-run`, and `import` (ImageMagick) for the screenshots,
-# which go to `out/`. With `ATMOS_ASAN=1`, the programs run under the
+# Requires `xvfb-run`, and `import` and `compare` (ImageMagick) for the
+# screenshots, which go to `out/`. A screenshot with a reference in
+# `tst/shots/` must be identical to it, pixel by pixel; `UPDATE_SHOTS=1`
+# records the references. The animations and the blink of the caret of
+# GTK are off (`tst/gtk/`), so that the pixels are stable. With `ATMOS_ASAN=1`, the programs run under the
 # address sanitizer. GTK and the libraries under it leak on their own,
 # so a leak only fails a test if the stack of its allocation has a
 # function of the runtime of Atmos or of `iup.atm`; any other error of
@@ -70,7 +73,7 @@ for t in "$@"; do
             $cc -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
         why="does not compile (see out/$t.log)"
     else
-        GTK_THEME=Adwaita LSAN_OPTIONS=exitcode=0 IUP_ATM_SCRIPT="$script" \
+        XDG_CONFIG_HOME=$PWD/tst/gtk GTK_THEME=Adwaita LSAN_OPTIONS=exitcode=0 IUP_ATM_SCRIPT="$script" \
             timeout 60 xvfb-run -a -s "-screen 0 640x480x24" \
             sh -c '"$0" > "$1" 2> "$2"' "out/$t.exe" "out/$t.res" "out/$t.log"
         code=$?
@@ -80,6 +83,18 @@ for t in "$@"; do
         elif grep -qE '^ +#[0-9]+ .* in (ati_|atm_|a_)[A-Za-z0-9_]* ' "out/$t.log"; then
             why="leak (see out/$t.log)"
         fi
+        # the screenshots, against the references in tst/shots
+        for png in $(grep -o 'shot:out/[^;]*\.png' "tst/$t.script" 2>/dev/null | sed 's|shot:out/||'); do
+            if [ -n "$UPDATE_SHOTS" ]; then
+                mkdir -p tst/shots
+                cp "out/$png" "tst/shots/$png"
+            elif [ -f "tst/shots/$png" ] && [ -z "$why" ]; then
+                ae=$(compare -metric AE "tst/shots/$png" "out/$png" null: 2>&1)
+                if [ "$ae" != "0" ]; then
+                    why="screenshot $png differs in $ae pixels"
+                fi
+            fi
+        done
     fi
     if [ -z "$why" ]; then
         echo "OK   $t"
