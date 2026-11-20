@@ -16,7 +16,7 @@ below; the sections refer to it.
 | #3 | The test mode by a global set in a `test` block (`envs` item 58) | open |
 | #4 | The C versions of the study are not driven by a script | open |
 | #5 | A real click on an item of a menu does nothing in the test mode | open, cause not found |
-| #6 | The flight booker shows its message in a label, not a dialog | open |
+| #6 | The flight booker shows its message in a label, not a dialog | done: a modal dialog (`iup.popup`) |
 | #7 | The cells: no double click to edit, no infix operators | open |
 | #8 | The keys (`K_ANY`) and the items of a list are not events | open |
 | #9 | The screenshots are saved and not compared | open |
