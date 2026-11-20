@@ -25,6 +25,7 @@ below; the sections refer to it.
 | #12 | What to build: all the examples of `lua-atmos/env-iup` and 7GUIs | closed, done |
 | #13 | The interface of an environment in Atmos (`atmos.env`), pilot with `env-uv` | closed, done |
 | #14 | The numeric options of the build (`ATMOS_REAL=float`, `ATMOS_INT=32`, `ATMOS_TIME=ms`) | done: the time is emitted in the unit of the build; the suite passes under each option (with `float`, only the printed digits of the timer differ) |
+| #15 | A test of `iup.atm` as a secondary environment (`atmos-envs#13`) | done: `tst/secondary` |
 
 ## A. Decisions waiting for the author
 
