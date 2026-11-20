@@ -1,0 +1,10 @@
+key	97	a
+key	98	b
+key	65307	nil
+key	120	x
+key	99	c
+txt.VALUE = abx
+item	1	one	true
+item	1	one	false
+item	2	two	true
+exit 0

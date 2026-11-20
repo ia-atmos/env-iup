@@ -1,0 +1,9 @@
+100:key:txt:a
+150:key:txt:b
+200:key:txt:0xFF1B
+250:key:txt:x
+300:key:txt:c
+350:get:txt:VALUE
+400:click:lst:20,8
+500:click:lst:20,25
+600:close:dlg

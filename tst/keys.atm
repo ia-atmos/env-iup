@@ -1,0 +1,23 @@
+;; The keys of a control, what K_ANY returns, and the items of a list.
+
+pin txt = iup.new(:text, [size=80, handlename="txt"])
+pin lst = iup.new(:list, [size="80x40", handlename="lst"])
+iup.set(lst, "1", "one")
+iup.set(lst, "2", "two")
+pin dlg = iup.new(:dialog, [handlename="dlg", iup.new(:hbox, [txt, lst])])
+iup.show(dlg)
+
+watching :close [h=dlg] {
+    par {
+        loop e on :key [h=txt] {
+            print("key", e.code, e.char)
+            if e.char == "x" {
+                iup.set(txt, "ATM_K_ANY", "IGNORE")     ;; the next keys are refused
+            }
+        }
+    } with {
+        loop e on :action [h=lst] {
+            print("item", e.item, e.text, e.state)
+        }
+    }
+}
