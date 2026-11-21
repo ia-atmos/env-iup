@@ -26,7 +26,7 @@ below; the sections refer to it.
 | #13 | The interface of an environment in Atmos (`atmos.env`), pilot with `env-uv` | closed, done |
 | #14 | The numeric options of the build (`ATMOS_REAL=float`, `ATMOS_INT=32`, `ATMOS_TIME=ms`) | done: the time is emitted in the unit of the build; the suite passes under each option (with `float`, only the printed digits of the timer differ) |
 | #15 | A test of `iup.atm` as a secondary environment (`atmos-envs#13`) | done: `tst/secondary` |
-| #16 | The rename of the numeric options (`A_TIME_US` -> `A_CLOCK_US`, atmos-float#21a) | done on `main`, with a bridge to the old names (`A_CLOCK_US`, `AFloat`) shared with `uv.atm`: 15/15 on lang `main` and on `float` |
+| #16 | The rename of the numeric options (`A_TIME_US` -> `A_CLOCK_US`, atmos-float#21a) | closed: lang `float` merged (d19d40f), the bridge removed, 15/15 |
 
 ## A. Decisions waiting for the author
 
