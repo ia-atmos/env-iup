@@ -124,10 +124,13 @@
 #include <iupdraw.h>
 #include <iupkey.h>
 
-// The unit of the clock of the build, by its name before and after the
-// rename of the numeric options of the compiler (lang branch `float`).
+// The names of the numeric options before `ia-atmos/lang` renamed them
+// (2026-11-20): with an older compiler, the new names are the old ones.
+// The same bridge as `uv.atm` of `env-uv`, which is skipped when this one
+// comes first, so it defines the same names.
 #ifndef A_CLOCK_US
 #define A_CLOCK_US A_TIME_US
+typedef AReal AFloat;
 #endif
 
 static const char* ATI_KIND = "iup.handle";
