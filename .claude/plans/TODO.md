@@ -11,7 +11,7 @@ below; the sections refer to it.
 
 | # | Title | State |
 |---|-------|-------|
-| #1 | The versions in Lua of 7GUIs to compare with | open, waits for the author |
+| #1 | The versions in Lua of 7GUIs to compare with | closed: the author (2026-11-22): nothing new in Lua; only if the code existed, and it does not |
 | #2 | The local remote points to `fsantanna/iup` | open, blocked by the session (pushes work by the redirect) |
 | #3 | The test mode by a global set in a `test` block (`envs` item 58) | open: the shape is set by env-sdl (a C global `IUP_TEST` set in a `test` block; no dialog shown; IUP opened after the main chunk starts; `IUP_ATM_SCRIPT` keeps working). Not done yet |
 | #4 | The C versions of the study are not driven by a script | open |
@@ -31,8 +31,7 @@ below; the sections refer to it.
 
 ## A. Decisions waiting for the author
 
-- #1: none found in `lua-atmos` or `atmos-lang` (asked 2026-11-16).
-  Where are they, or should they be written over `lua-atmos/env-iup`?
+- (none)
 
 ## B. Work known and not done
 
