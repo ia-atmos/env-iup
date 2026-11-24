@@ -47,6 +47,11 @@ below; the sections refer to it.
 
 ## Context
 
+- Coordination, status and questions for the author go to the session
+  `atmos` (session_011eECohhJbc4GMpAj3yyeEo), since 2026-11-24;
+  measurements on the ports and merges into lang `main` stay with
+  `atmos-lang`. Paused until next week's credits: no new work, only
+  what arrives.
 - Findings about `pin` go to the session `atmos-pin`
   (session_011eECogSDhkVfyt7qme5DLh), with a small program; anything
   else of the compiler to `atmos-lang` (session_011eECogKVQ7ZzmWCoMST2wK).
