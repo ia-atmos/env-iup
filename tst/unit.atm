@@ -1,0 +1,29 @@
+;; Under `-t`, a `test` block drives the program by emitting the events of
+;; IUP itself: no dialog is shown, no script is needed.
+
+pin txt = iup.new(:text,   [value=0, handlename="txt"])
+pin but = iup.new(:button, [title="Count", handlename="but"])
+pin dlg = iup.new(:dialog, [iup.new(:hbox, [txt, but])])
+
+task Counter () {
+    iup.show(dlg)
+    loop on :action [h=but] {
+        iup.set(txt, "VALUE", tonumber(iup.get(txt, "VALUE")) + 1)
+    }
+}
+
+test {
+    spawn Counter()
+    print("visible", iup.get(dlg, "VISIBLE"))
+    emit(:action [h=but])
+    emit(:action [h=but])
+    print("count", iup.get(txt, "VALUE"))
+    await 100ms                 ;; the time passes
+    print("100ms")
+    pin menu = iup.new(:menu, [iup.new(:item, [title="x"])])
+    iup.popup(menu)
+    await :popup [h=menu]       ;; closed at once
+    print("popup closed")
+    return
+}
+print("not under -t")
