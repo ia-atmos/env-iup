@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iup.h>
+#include "script.h"
 
-static Ihandle *cmb, *t1, *t2, *but, *msg;
+static Ihandle *cmb, *t1, *t2, *but, *msg, *box;
 
 // The date `dd.mm.yyyy` as a number that can be compared, or 0.
 static int date (const char* s) {
@@ -41,7 +42,12 @@ static int on_book (Ihandle* h) {
     } else {
         IupSetStrf(msg, "TITLE", "You have booked a one-way flight on %s.", a);
     }
+    IupPopup(box, IUP_CENTERPARENT, IUP_CENTERPARENT);  // the confirmation
     return IUP_DEFAULT;
+}
+
+static int on_ok (Ihandle* h) {
+    return IUP_CLOSE;           // closes the popup
 }
 
 int main (int argc, char** argv) {
@@ -56,17 +62,34 @@ int main (int argc, char** argv) {
     IupSetAttribute(but, "SIZE", "90");
     msg = IupLabel("");
     IupSetAttribute(msg, "SIZE", "260");
+    Ihandle* ok = IupButton("OK", NULL);
+    IupSetAttribute(ok, "SIZE", "40");
+    IupSetCallback(ok, "ACTION", on_ok);
+    Ihandle* mbox = IupVbox(msg, ok, NULL);
+    IupSetAttributes(mbox, "NGAP=10, ALIGNMENT=ACENTER");
+    box = IupDialog(mbox);
+    IupSetAttributes(box, "TITLE=Booked, MARGIN=10x10");
     IupSetCallback(cmb, "VALUECHANGED_CB", update);
     IupSetCallback(t1,  "VALUECHANGED_CB", update);
     IupSetCallback(t2,  "VALUECHANGED_CB", update);
     IupSetCallback(but, "ACTION", on_book);
-    Ihandle* box = IupVbox(cmb, t1, t2, but, msg, NULL);
-    IupSetAttribute(box, "NGAP", "5");
-    Ihandle* dlg = IupDialog(box);
+    Ihandle* vbox = IupVbox(cmb, t1, t2, but, NULL);
+    IupSetAttribute(vbox, "NGAP", "5");
+    Ihandle* dlg = IupDialog(vbox);
     IupSetAttributes(dlg, "TITLE=\"Book Flight\", MARGIN=10x10");
     IupShow(dlg);
     update(NULL);
+    IupSetHandle("cmb", cmb);
+    IupSetHandle("t1", t1);
+    IupSetHandle("t2", t2);
+    IupSetHandle("but", but);
+    IupSetHandle("msg", msg);
+    IupSetHandle("ok", ok);
+    IupSetHandle("box", box);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
+    IupDestroy(box);
     IupClose();
     return 0;
 }
