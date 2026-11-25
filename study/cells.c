@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <setjmp.h>
 #include <iup.h>
+#include "script.h"
 
 #define COLS 26
 #define ROWS 100
@@ -196,15 +197,24 @@ static void compute (int id) {
     c->busy = 0;
 }
 
-static int on_getfocus (Ihandle* h) {
-    int id = IupGetInt(h, "CELL");
-    focus = id;
-    IupSetStrAttribute(h, "VALUE", cells[id].src);
+// A double click edits the formula of a cell.
+static int on_button (Ihandle* h, int but, int press, int x, int y, char* status) {
+    if (but==IUP_BUTTON1 && press && iup_isdouble(status)) {
+        int id = IupGetInt(h, "CELL");
+        focus = id;
+        IupSetAttribute(h, "READONLY", "NO");
+        IupSetStrAttribute(h, "VALUE", cells[id].src);
+    }
     return IUP_DEFAULT;
 }
 
+// The edition ends when the cell loses the focus.
 static int on_killfocus (Ihandle* h) {
     int id = IupGetInt(h, "CELL");
+    if (id != focus) {
+        return IUP_DEFAULT;
+    }
+    IupSetAttribute(h, "READONLY", "YES");
     const char* v = IupGetAttribute(h, "VALUE");
     focus = -1;
     if (v == NULL) {
@@ -233,10 +243,13 @@ int main (int argc, char** argv) {
         IupAppend(grid, l);
         for (int c=0; c<COLS; c++) {
             Ihandle* t = IupText(NULL);
-            IupSetAttribute(t, "SIZE", "40");
+            IupSetAttributes(t, "SIZE=40, READONLY=YES");
             IupSetInt(t, "CELL", r*COLS + c);
-            IupSetCallback(t, "GETFOCUS_CB",  on_getfocus);
+            IupSetCallback(t, "BUTTON_CB",    (Icallback) on_button);
             IupSetCallback(t, "KILLFOCUS_CB", on_killfocus);
+            char name[8];
+            snprintf(name, sizeof(name), "%c%d", 'A'+c, r);
+            IupSetHandle(name, t);
             cells[r*COLS + c].h = t;
             IupAppend(grid, t);
         }
@@ -245,6 +258,8 @@ int main (int argc, char** argv) {
     Ihandle* dlg = IupDialog(IupScrollBox(grid));
     IupSetAttributes(dlg, "TITLE=Cells, RASTERSIZE=620x400");
     IupShow(dlg);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
     IupClose();
     return 0;
