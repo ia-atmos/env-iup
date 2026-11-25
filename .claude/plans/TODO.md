@@ -14,7 +14,7 @@ below; the sections refer to it.
 | #1 | The versions in Lua of 7GUIs to compare with | closed: the author (2026-11-22): nothing new in Lua; only if the code existed, and it does not |
 | #2 | The local remote points to `fsantanna/iup` | open, blocked by the session (pushes work by the redirect) |
 | #3 | The test mode by a global set in a `test` block (`envs` item 58) | done: a `test` block of `iup.atm` sets `ATI_TEST`; dialogs mapped, not shown; popups closed at once (`tst/unit`). IUP is still opened at the include (after the flag), as the manual allows |
-| #4 | The C versions of the study are not driven by a script | open |
+| #4 | The C versions of the study are not driven by a script | done: `study/script.h` (the test mode in C) and `study/run.sh` (`make study`): the seven C versions run under the scripts of the Atmos versions and print the same traces; the C flight booker got its modal dialog and the C cells their double click, as the Atmos versions |
 | #5 | A real click on an item of a menu does nothing in the test mode | done: the events that IUP synthesizes have no device of GDK, and a menu of GTK ignores them; the clicks now go through XTest |
 | #6 | The flight booker shows its message in a label, not a dialog | done: a modal dialog (`iup.popup`) |
 | #7 | The cells: no double click to edit, no infix operators | done: a double click edits; the formulas keep functions only, as the 7GUIs reference does (by the session, to be confirmed) |
@@ -35,8 +35,6 @@ below; the sections refer to it.
 
 ## B. Work known and not done
 
-- #4: a script of actions for them would make the comparison of behavior
-  a fact.
 - #10: IUP 3.32 distributes binaries for Linux and Windows only; the
   readme says Linux on x86-64. Windows is not tried.
 
