@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iup.h>
+#include "script.h"
 
 #define MAX 256
 
@@ -133,6 +134,15 @@ int main (int argc, char** argv) {
     IupSetAttributes(dlg, "TITLE=CRUD, MARGIN=10x10");
     IupShow(dlg);
     refresh();
+    IupSetHandle("flt", flt);
+    IupSetHandle("lst", lst);
+    IupSetHandle("name", tnam);
+    IupSetHandle("surname", tsur);
+    IupSetHandle("create", bcre);
+    IupSetHandle("update", bupd);
+    IupSetHandle("delete", bdel);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
     IupClose();
     return 0;

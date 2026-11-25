@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <iup.h>
+#include "script.h"
 #include <iupdraw.h>
 
 #define MAX 1024
@@ -198,6 +199,14 @@ int main (int argc, char** argv) {
 
     IupShow(dlg);
     buttons();
+    IupSetHandle("cnv", cnv);
+    IupSetHandle("undo", undo);
+    IupSetHandle("redo", redo);
+    IupSetHandle("item", item);
+    IupSetHandle("adj", adj);
+    IupSetHandle("sld", sld);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
     IupDestroy(menu);
     IupDestroy(adj);

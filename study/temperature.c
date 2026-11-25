@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <iup.h>
+#include "script.h"
 
 static Ihandle *tc, *tf;
 
@@ -45,6 +46,10 @@ int main (int argc, char** argv) {
     Ihandle* dlg = IupDialog(box);
     IupSetAttributes(dlg, "TITLE=TempConv, MARGIN=10x10");
     IupShow(dlg);
+    IupSetHandle("c", tc);
+    IupSetHandle("f", tf);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
     IupClose();
     return 0;

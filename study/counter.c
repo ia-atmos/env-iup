@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <iup.h>
+#include "script.h"
 
 static Ihandle* txt;
 static int n = 0;
@@ -24,6 +25,10 @@ int main (int argc, char** argv) {
     Ihandle* dlg = IupDialog(box);
     IupSetAttributes(dlg, "TITLE=Counter, MARGIN=10x10");
     IupShow(dlg);
+    IupSetHandle("txt", txt);
+    IupSetHandle("but", but);
+    IupSetHandle("dlg", dlg);
+    study_script(NULL);
     IupMainLoop();
     IupClose();
     return 0;
