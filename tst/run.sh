@@ -12,6 +12,9 @@
 #   tst/name.script                 the actions, one per line (optional)
 #   tst/name.out                    the expected output
 #
+# A program with a `test` block at its top level is built with `-t`, and
+# its tests drive it (see `tst/unit.atm`).
+#
 # A program that calls `atmos.env` itself, before it includes `iup.atm`
 # (IUP as a secondary environment), is built with the plain compiler of
 # `../lang` (or `LANG_DIR`).
@@ -69,8 +72,13 @@ for t in "$@"; do
         flags="${flags:-${ATMOS_CFLAGS:--O1}} -I$IUP/include"
         libs="$libs -L$IUP -liup -Wl,-rpath,$IUP"
     fi
+    # a program with `test` blocks runs them (`-t`)
+    opt=
+    if grep -q '^test {' "$prog"; then
+        opt=-t
+    fi
     if ! ATMOS_CFLAGS="${flags:-${ATMOS_CFLAGS:--O1}}" ATMOS_LDFLAGS="$libs" \
-            $cc -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
+            $cc $opt -o "out/$t.exe" "$prog" > "out/$t.log" 2>&1; then
         why="does not compile (see out/$t.log)"
     else
         XDG_CONFIG_HOME=$PWD/tst/gtk GTK_THEME=Adwaita LSAN_OPTIONS=exitcode=0 IUP_ATM_SCRIPT="$script" \
