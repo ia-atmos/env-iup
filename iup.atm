@@ -146,6 +146,7 @@ static int     ATI_BUSY = 0;        // the program is reacting
 static int     ATI_QUIT = 0;        // the script asked to terminate
 static int     ATI_POPS = 0;        // the popups in course
 static int     ATI_TICK = 0;        // the timer of the time is running
+static int     ATI_TEST = 0;        // under `-t` (set by a `test` block below)
 
 // The events that happen while the program is reacting (it called a
 // function of IUP that called a callback): they wait for it.
@@ -479,7 +480,9 @@ static AStatus ati_show (AVal h, int show) {
     if (ih == NULL) {
         return a_error("invalid handle");
     }
-    if (show) {
+    if (show && ATI_TEST) {
+        IupMap(ih);             // under `-t`, the controls exist, unseen
+    } else if (show) {
         IupShow(ih);
     } else {
         IupHide(ih);
@@ -517,7 +520,9 @@ static int ati_pop_cb (Ihandle* t) {
         Ihandle* ih = ati_ptr(h);
         if (ih != NULL) {
             ATI_POPS++;
-            IupPopup(ih, x, y);
+            if (!ATI_TEST) {
+                IupPopup(ih, x, y);     // under `-t`, closed at once
+            }
             ATI_POPS--;
             ih = ati_ptr(h);
             if (ih != NULL) {
@@ -856,6 +861,14 @@ static void ati_quit (void) {
     IupClose();
 }
 ```
+
+;; Under `-t` (`test` blocks), the program is driven by its tests: a
+;; dialog is created and not shown (`iup.show` maps it), and a popup is
+;; closed at once (`:popup` comes with no wait). IUP still needs a display
+;; (`xvfb-run`), and the time still passes as usual.
+test {
+    `ATI_TEST = 1;`
+}
 
 `ati_open();`
 
