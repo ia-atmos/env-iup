@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iup.h>
+#include "script.h"
 
 static Ihandle *bar, *lbl, *sld;
 static double elapsed  = 0;     // both in seconds
@@ -10,14 +11,13 @@ static double duration = 15;
 static double prv;              // the time of the last tick
 
 static double now (void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + ts.tv_nsec/1e9;
+    return study_now();
 }
 
 static void show (void) {
     IupSetStrf(lbl, "TITLE", "%.1fs", elapsed);
-    IupSetDouble(bar, "VALUE", (duration > 0) ? elapsed/duration : 1);
+    // as the binding of Atmos converts a number to a string
+    IupSetStrf(bar, "VALUE", "%.14g", (duration > 0) ? elapsed/duration : 1);
 }
 
 static int on_tick (Ihandle* h) {
@@ -68,11 +68,19 @@ int main (int argc, char** argv) {
     IupSetAttributes(dlg, "TITLE=Timer, MARGIN=10x10");
     IupShow(dlg);
 
+    IupSetHandle("bar", bar);
+    IupSetHandle("lbl", lbl);
+    IupSetHandle("sld", sld);
+    IupSetHandle("rst", rst);
+    IupSetHandle("dlg", dlg);
     Ihandle* tick = IupTimer();
     IupSetAttribute(tick, "TIME", "10");
     IupSetCallback(tick, "ACTION_CB", on_tick);
+    int scripted = study_script(on_tick);   // under a script, the time is virtual
     prv = now();
-    IupSetAttribute(tick, "RUN", "YES");
+    if (!scripted) {
+        IupSetAttribute(tick, "RUN", "YES");
+    }
 
     IupMainLoop();
     IupDestroy(tick);
