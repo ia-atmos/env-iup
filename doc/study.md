@@ -24,11 +24,14 @@ of these fourteen files and no more.
   two reactions, and where they are declared. The handles of the
   controls are not counted.
 
-What holds for both versions: the Atmos versions are tested (a script
-of actions each, in `tst/`), and the C versions were only compiled with
-`-Wall` and started under `xvfb-run`, not driven by a script. So the
-claim that the two behave the same comes from writing one from the
-other, function by function, and not from a test.
+Both versions are driven by the same script of actions (the test of the
+Atmos version, `tst/7guis-<task>.script`), and print the same trace:
+`study/run.sh` runs each C version under that script (with the test mode
+of `study/script.h`, a port of the one of `iup.atm`) and compares its
+trace with the expected output of the Atmos version. All seven are the
+same. The lines of the test mode in C (`IupSetHandle`, `study_script`)
+are not counted; in Atmos, they are attributes (`handlename`) in lines
+that exist anyway.
 
 ## Numbers
 
@@ -36,12 +39,12 @@ other, function by function, and not from a test.
 |------|-------------:|---------:|---------------:|-------------------:|
 | Counter | 16 | 25 | 1 | 1 |
 | Temperature converter | 30 | 43 | 2 | 2 |
-| Flight booker | 63 | 63 | 2 | 2 |
+| Flight booker | 76 | 75 | 3 | 2, and 1 await in sequence |
 | Timer | 43 | 70 | 3 | 3 |
 | CRUD | 95 | 117 | 5 | 5 |
 | Circle drawer | 147 | 175 | 8 | 6, and 2 awaits in sequence |
-| Cells | 168 | 228 | 2 | 1, and a task per formula |
-| Total | 562 | 721 | 23 | |
+| Cells | 174 | 237 | 2 | 2, and a task per formula |
+| Total | 581 | 742 | 24 | |
 
 The Atmos versions have about 80% of the lines of the C ones. Most of
 the difference is not in the logic: C declares, converts, and creates
@@ -124,10 +127,12 @@ that reads two others may be computed twice for one change.
 
 ## Where it made none
 
-**The flight booker** has the same lines in both. It is a set of
+**The flight booker** has about the same lines in both. It is a set of
 constraints over the present values of four controls: one function
 computes them all, and any change calls it. There is no state and no
-sequence, and a callback is as direct as an event.
+sequence, and a callback is as direct as an event. Its confirmation is a
+modal dialog: in C a plain `IupPopup`, which only returns when the
+dialog closes; in Atmos `iup.popup` and an await of its end.
 
 **The temperature converter and the CRUD** are the same programs in the
 two versions, a function for a loop: each reaction is independent of
