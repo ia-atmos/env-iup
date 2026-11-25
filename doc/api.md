@@ -12,6 +12,7 @@ attributes, and the callbacks are those of the documentation of IUP.
 - [What a callback returns](#what-a-callback-returns)
 - [Handles](#handles)
 - [Time and termination](#time-and-termination)
+- [Tests in the program](#tests-in-the-program)
 - [Test mode](#test-mode)
 
 ## Functions
@@ -195,6 +196,26 @@ step runs after each step of IUP, so at most 10ms apart.
 The program terminates when its main chunk terminates, and not when
 the last dialog is closed: a program normally ends with a
 `watching :close [h=dlg] { ... }`.
+
+## Tests in the program
+
+Under `-t` (`atmos-iup -t prog.atm`), the `test` blocks of the program
+run, and `iup.atm` knows it by a `test` block of its own, which sets a
+flag of its C. Then a dialog is created and not shown (`iup.show` maps
+it, so its controls exist and their attributes work), and a popup is
+closed at once (`:popup` comes with no wait). The test drives the program
+by emitting the events of IUP itself, with no script:
+
+```
+test {
+    spawn Counter()
+    emit(:action [h=but])
+    print(iup.get(txt, "VALUE"))
+    await 100ms                 ;; the time passes as usual
+}
+```
+
+IUP still needs a display (`xvfb-run`). See `tst/unit.atm`.
 
 ## Test mode
 
