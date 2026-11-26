@@ -34,13 +34,14 @@
 ;;      :value  [h]             `VALUECHANGED_CB` (a text was edited, ...)
 ;;      :close  [h]             `CLOSE_CB` (a dialog was closed)
 ;;      :button [h,but,press,x,y,status]
-;;                              `BUTTON_CB` (a button of the mouse, `1` to
-;;                              `3`, was pressed or released on a canvas)
+;;                              `BUTTON_CB` (a button of the mouse, `:left`,
+;;                              `:middle`, or `:right`, was pressed or
+;;                              released on a canvas)
 ;;      :motion [h,x,y,status]  `MOTION_CB` (the mouse moved on a canvas)
 ;;
 ;; The `status` of an event of the mouse is a table of booleans: the keys
-;; `shift`, `ctrl`, `alt`, and `sys` that are down, the buttons `b1`,
-;; `b2`, and `b3` that are down, and `double` for a double click.
+;; `shift`, `ctrl`, `alt`, and `sys` that are down, the buttons `left`,
+;; `middle`, and `right` that are down, and `double` for a double click.
 ;;      :key    [h,code,char]   `K_ANY` (a key was pressed in a control: its
 ;;                              code in IUP, `K_*` of iupkey.h, and the
 ;;                              character if it is printable)
@@ -306,15 +307,18 @@ static AVal ati_status (const char* s) {
     ati_fld(t, "alt",    a_bool(iup_isalt(s)));
     ati_fld(t, "sys",    a_bool(iup_issys(s)));
     ati_fld(t, "double", a_bool(iup_isdouble(s)));
-    ati_fld(t, "b1",     a_bool(iup_isbutton1(s)));
-    ati_fld(t, "b2",     a_bool(iup_isbutton2(s)));
-    ati_fld(t, "b3",     a_bool(iup_isbutton3(s)));
+    ati_fld(t, "left",   a_bool(iup_isbutton1(s)));
+    ati_fld(t, "middle", a_bool(iup_isbutton2(s)));
+    ati_fld(t, "right",  a_bool(iup_isbutton3(s)));
     return t;
 }
 
 static int ati_cb_button (Ihandle* h, int but, int press, int x, int y, char* status) {
     AVal evt = ati_evt("button", h);
-    ati_fld(evt, "but",    a_int(but - '0'));
+    // the button as a tag: `:left`, `:middle`, `:right` (`:b4`, `:b5`)
+    static const char* BUTS[] = { "left", "middle", "right", "b4", "b5" };
+    int b = but - '1';
+    ati_fld(evt, "but",    a_strz((b>=0 && b<5) ? BUTS[b] : "?"));
     ati_fld(evt, "press",  a_bool(press));
     ati_fld(evt, "x",      a_int(x));
     ati_fld(evt, "y",      a_int(y));
