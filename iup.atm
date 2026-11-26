@@ -37,6 +37,10 @@
 ;;                              `BUTTON_CB` (a button of the mouse, `1` to
 ;;                              `3`, was pressed or released on a canvas)
 ;;      :motion [h,x,y,status]  `MOTION_CB` (the mouse moved on a canvas)
+;;
+;; The `status` of an event of the mouse is a table of booleans: the keys
+;; `shift`, `ctrl`, `alt`, and `sys` that are down, the buttons `b1`,
+;; `b2`, and `b3` that are down, and `double` for a double click.
 ;;      :key    [h,code,char]   `K_ANY` (a key was pressed in a control: its
 ;;                              code in IUP, `K_*` of iupkey.h, and the
 ;;                              character if it is printable)
@@ -293,13 +297,28 @@ static int ati_cb_close (Ihandle* h) {
     return ret;
 }
 
+// The status of the mouse and of the keyboard in an event of the mouse,
+// which IUP gives as a string of fixed positions: as a table (owned).
+static AVal ati_status (const char* s) {
+    AVal t = a_tab();
+    ati_fld(t, "shift",  a_bool(iup_isshift(s)));
+    ati_fld(t, "ctrl",   a_bool(iup_iscontrol(s)));
+    ati_fld(t, "alt",    a_bool(iup_isalt(s)));
+    ati_fld(t, "sys",    a_bool(iup_issys(s)));
+    ati_fld(t, "double", a_bool(iup_isdouble(s)));
+    ati_fld(t, "b1",     a_bool(iup_isbutton1(s)));
+    ati_fld(t, "b2",     a_bool(iup_isbutton2(s)));
+    ati_fld(t, "b3",     a_bool(iup_isbutton3(s)));
+    return t;
+}
+
 static int ati_cb_button (Ihandle* h, int but, int press, int x, int y, char* status) {
     AVal evt = ati_evt("button", h);
     ati_fld(evt, "but",    a_int(but - '0'));
     ati_fld(evt, "press",  a_bool(press));
     ati_fld(evt, "x",      a_int(x));
     ati_fld(evt, "y",      a_int(y));
-    ati_fld(evt, "status", a_strz(status));
+    ati_fld(evt, "status", ati_status(status));
     int ret = ati_ret(h, "BUTTON_CB");
     ati_fire(evt);
     return ret;
@@ -309,7 +328,7 @@ static int ati_cb_motion (Ihandle* h, int x, int y, char* status) {
     AVal evt = ati_evt("motion", h);
     ati_fld(evt, "x",      a_int(x));
     ati_fld(evt, "y",      a_int(y));
-    ati_fld(evt, "status", a_strz(status));
+    ati_fld(evt, "status", ati_status(status));
     int ret = ati_ret(h, "MOTION_CB");
     ati_fire(evt);
     return ret;
