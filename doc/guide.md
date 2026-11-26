@@ -163,7 +163,7 @@ par {
         iup.draw(cnv, :end)
     }
 } with {
-    loop e on :button [h=cnv] until it.press && (it.but == :left) {
+    loop e on :button [h=cnv] until (it.press && (it.but == :left)) {
         vector.insert(circles, [x=e.x, y=e.y, r=20])
         iup.update(cnv)
     }
