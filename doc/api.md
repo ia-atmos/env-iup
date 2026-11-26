@@ -143,6 +143,19 @@ loop e on :focus {              ;; any control
 }
 ```
 
+The `status` of an event of the mouse is a table of booleans, and not
+the string of fixed positions of IUP: `shift`, `ctrl`, `alt`, and `sys`
+for the keys that are down, `b1`, `b2`, and `b3` for the buttons that
+are down, and `double` for a double click:
+
+```
+loop e on :button [h=cnv] {
+    if e.press && e.status.double {
+        ;; a double click
+    }
+}
+```
+
 An event is emitted inside its callback, so the program reacts before
 IUP goes on. The exception is an event that happens while the program
 reacts, because it called a function of IUP that called a callback:
