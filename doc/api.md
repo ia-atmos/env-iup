@@ -128,7 +128,7 @@ are set in every control that `iup.new` creates.
 | `:key [h,code,char]` | `K_ANY` | A key was pressed in a control: its code in IUP (`K_*` of `iupkey.h`), and the character if it is printable |
 | `:value [h]` | `VALUECHANGED_CB` | The user changed a text, a list, a slider |
 | `:close [h]` | `CLOSE_CB` | The user closed a dialog |
-| `:button [h,but,press,x,y,status]` | `BUTTON_CB` | A button of the mouse (`but` from `1` to `3`) was pressed (`press` is `true`) or released on a canvas |
+| `:button [h,but,press,x,y,status]` | `BUTTON_CB` | A button of the mouse (`but` is `:left`, `:middle`, or `:right`) was pressed (`press` is `true`) or released on a canvas |
 | `:motion [h,x,y,status]` | `MOTION_CB` | The mouse moved on a canvas |
 | `:focus [h,focus]` | `GETFOCUS_CB`, `KILLFOCUS_CB` | A control got or lost the focus of the keyboard |
 | `:popup [h]` | | A popup was closed |
@@ -145,8 +145,8 @@ loop e on :focus {              ;; any control
 
 The `status` of an event of the mouse is a table of booleans, and not
 the string of fixed positions of IUP: `shift`, `ctrl`, `alt`, and `sys`
-for the keys that are down, `b1`, `b2`, and `b3` for the buttons that
-are down, and `double` for a double click:
+for the keys that are down, `left`, `middle`, and `right` for the
+buttons that are down, and `double` for a double click:
 
 ```
 loop e on :button [h=cnv] {

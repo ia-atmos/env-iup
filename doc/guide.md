@@ -164,7 +164,7 @@ par {
     }
 } with {
     loop e on :button [h=cnv] {
-        if e.press && (e.but == 1) {
+        if e.press && (e.but == :left) {
             vector.insert(circles, [x=e.x, y=e.y, r=20])
             iup.update(cnv)
         }
