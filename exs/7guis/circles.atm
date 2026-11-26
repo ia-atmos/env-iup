@@ -136,13 +136,13 @@ watching :close [h=dlg] {
         loop e on :button [h=cnv] {
             if e.press {
                 val c = find(e.x, e.y)
-                if (e.but == 1) && (c == nil) {
+                if (e.but == :left) && (c == nil) {
                     val new = vector.insert(cs, [x=e.x, y=e.y, d=40])
                     set over = new
                     record(:new [c=new])
                     iup.update(cnv)
                 }
-                if (e.but == 3) && (c != nil) {
+                if (e.but == :right) && (c != nil) {
                     iup.popup(menu)
                     val x = await <:action [h=item] || :popup [h=menu]>
                     if x.tag == :action {

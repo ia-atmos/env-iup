@@ -175,7 +175,7 @@ watching :close [h=dlg] {
         ;; a double click edits the formula of a cell
         loop e on :button {
             val id = iup.get(e.h, "CELL")
-            if id && e.press && (e.but == 1) && e.status.double {
+            if id && e.press && (e.but == :left) && e.status.double {
                 set focus = id
                 iup.set(e.h, "READONLY", false)
                 iup.set(e.h, "VALUE", srcs@id || "")
