@@ -29,7 +29,7 @@ below; the sections refer to it.
 | #16 | The rename of the numeric options (`A_TIME_US` -> `A_CLOCK_US`, atmos-float#21a) | closed: lang `float` merged (d19d40f), the bridge removed, 15/15 |
 | #17 | Experiment: the modal of the circle drawer with `grab` (atmos-lang#112a) | done on a local branch `exp-grab` (3f0eadf, not pushed, not to merge); reported to atmos-grab and atmos-lang |
 | #18 | Excerpt, idiomatic: a test drives the program by emitting the events of IUP (`tst/unit.atm:15-20`) | shown to the author 2026-11-26 |
-| #19 | Excerpt, bad: a double click read from the 6th byte of a status string (`exs/7guis/cells.atm:178`) | shown to the author 2026-11-26; open: a field `double` in `:button` would fix it in the environment |
+| #19 | Excerpt, bad: a double click read from the 6th byte of a status string (`exs/7guis/cells.atm:178`) | closed: the author said yes (2026-11-26) to `status` as a table of booleans; `e.status.double` |
 
 ## A. Decisions waiting for the author
 
