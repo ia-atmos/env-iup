@@ -133,7 +133,7 @@ watching :close [h=dlg] {
             }
         }
     } with {
-        loop e on :button [h=cnv] until it.press {
+        loop e on :button [h=cnv] until e.press {
             val c = find(e.x, e.y)
             ifs {
                 (e.but == :left) && (c == nil) => {
