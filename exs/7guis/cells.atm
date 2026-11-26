@@ -173,9 +173,9 @@ pin run = []            ;; id -> the task of its formula
 watching :close [h=dlg] {
     par {
         ;; a double click edits the formula of a cell
-        loop e on :button {
+        loop e on :button until (it.press && (it.but == :left) && it.status.double) {
             val id = iup.get(e.h, "CELL")
-            if id && e.press && (e.but == :left) && e.status.double {
+            if id {
                 set focus = id
                 iup.set(e.h, "READONLY", false)
                 iup.set(e.h, "VALUE", srcs@id || "")
