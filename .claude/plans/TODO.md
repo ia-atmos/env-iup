@@ -32,6 +32,8 @@ below; the sections refer to it.
 | #19 | Excerpt, bad: a double click read from the 6th byte of a status string (`exs/7guis/cells.atm:178`) | closed: the author said yes (2026-11-26) to `status` as a table of booleans; `e.status.double` |
 | #20 | Excerpt, idiomatic: `e.status.double` (`exs/7guis/cells.atm:178`) | shown to the author 2026-11-26 |
 | #21 | Excerpt, bad: `e.but == 1`, a bare number for the left button | closed: the author said yes (2026-11-26); `e.but` is a tag (`:left`, `:middle`, `:right`), and the buttons of `status` have the same names |
+| #22 | Excerpt: the two rules of the canvas of the circle drawer (`exs/7guis/circles.atm:136`) | closed: rewritten as the author suggested (2026-11-26), the press as a predicate of the loop (`until it.press`) and the exclusive cases in an `ifs` |
+| #23 | Excerpt: the id of a cell kept in an attribute of its control (`exs/7guis/cells.atm:177`) | closed: the author finds it ok; the C version does the same (`IupSetInt`/`IupGetInt` of `CELL`) |
 
 ## A. Decisions waiting for the author
 
