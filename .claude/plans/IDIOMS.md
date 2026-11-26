@@ -20,17 +20,18 @@ loop e on :button [h=cnv] {
 }
 
 ;; after
-loop e on :button [h=cnv] until it.press {
+loop e on :button [h=cnv] until e.press {
     <...>
 }
 ```
 
-It does not apply when the condition needs something computed inside
+The predicate names the event by the variable of the loop (`e`, not
+`it`), since lang `9d4561a`. It does not apply when the condition needs something computed inside
 the body. A predicate with more than one term goes in parentheses
 (#20):
 
 ```
-loop e on :button until (it.press && (it.but == :left) && it.status.double) {
+loop e on :button until (e.press && (e.but == :left) && e.status.double) {
     <...>
 }
 ```
