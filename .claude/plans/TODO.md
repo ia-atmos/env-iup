@@ -47,6 +47,9 @@ below; the sections refer to it.
 - At each big step (a milestone, a feature that changes the screen),
   show the author a few screenshots in the report (his recommendation,
   2026-11-26).
+- For each group of changes, show the author one pair of Atmos excerpts
+  from that work, one idiomatic and one bad (awkward, verbose, a
+  workaround), short, with file and line (his rule, 2026-11-26).
 - Coordination, status and questions for the author go to the session
   `atmos` (session_011eECohhJbc4GMpAj3yyeEo), since 2026-11-24;
   measurements on the ports and merges into lang `main` stay with
