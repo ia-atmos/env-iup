@@ -28,6 +28,8 @@ below; the sections refer to it.
 | #15 | A test of `iup.atm` as a secondary environment (`atmos-envs#13`) | done: `tst/secondary` |
 | #16 | The rename of the numeric options (`A_TIME_US` -> `A_CLOCK_US`, atmos-float#21a) | closed: lang `float` merged (d19d40f), the bridge removed, 15/15 |
 | #17 | Experiment: the modal of the circle drawer with `grab` (atmos-lang#112a) | done on a local branch `exp-grab` (3f0eadf, not pushed, not to merge); reported to atmos-grab and atmos-lang |
+| #18 | Excerpt, idiomatic: a test drives the program by emitting the events of IUP (`tst/unit.atm:15-20`) | shown to the author 2026-11-26 |
+| #19 | Excerpt, bad: a double click read from the 6th byte of a status string (`exs/7guis/cells.atm:178`) | shown to the author 2026-11-26; open: a field `double` in `:button` would fix it in the environment |
 
 ## A. Decisions waiting for the author
 
@@ -49,7 +51,9 @@ below; the sections refer to it.
   2026-11-26).
 - For each group of changes, show the author one pair of Atmos excerpts
   from that work, one idiomatic and one bad (awkward, verbose, a
-  workaround), short, with file and line (his rule, 2026-11-26).
+  workaround), short, with file and line (his rule, 2026-11-26). Each
+  excerpt takes a number `#N` of this index, and a bad one says why and
+  what would make it better (the language, the environment, the port).
 - Coordination, status and questions for the author go to the session
   `atmos` (session_011eECohhJbc4GMpAj3yyeEo), since 2026-11-24;
   measurements on the ports and merges into lang `main` stay with
