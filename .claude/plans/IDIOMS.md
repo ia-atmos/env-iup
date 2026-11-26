@@ -26,7 +26,14 @@ loop e on :button [h=cnv] until it.press {
 ```
 
 It does not apply when the condition needs something computed inside
-the body.
+the body. A predicate with more than one term goes in parentheses
+(#20):
+
+```
+loop e on :button until (it.press && (it.but == :left) && it.status.double) {
+    <...>
+}
+```
 
 ### Exclusive cases go in an `ifs` (#22)
 
