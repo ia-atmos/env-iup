@@ -44,6 +44,9 @@ below; the sections refer to it.
 
 ## Context
 
+- At each big step (a milestone, a feature that changes the screen),
+  show the author a few screenshots in the report (his recommendation,
+  2026-11-26).
 - Coordination, status and questions for the author go to the session
   `atmos` (session_011eECohhJbc4GMpAj3yyeEo), since 2026-11-24;
   measurements on the ports and merges into lang `main` stay with
