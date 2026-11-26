@@ -28,9 +28,9 @@ below; the sections refer to it.
 | #15 | A test of `iup.atm` as a secondary environment (`atmos-envs#13`) | done: `tst/secondary` |
 | #16 | The rename of the numeric options (`A_TIME_US` -> `A_CLOCK_US`, atmos-float#21a) | closed: lang `float` merged (d19d40f), the bridge removed, 15/15 |
 | #17 | Experiment: the modal of the circle drawer with `grab` (atmos-lang#112a) | done on a local branch `exp-grab` (3f0eadf, not pushed, not to merge); reported to atmos-grab and atmos-lang |
-| #18 | Excerpt, idiomatic: a test drives the program by emitting the events of IUP (`tst/unit.atm:15-20`) | shown to the author 2026-11-26 |
+| #18 | Excerpt, idiomatic: a test drives the program by emitting the events of IUP (`tst/unit.atm:15-20`) | closed: the author (2026-11-26) asked for `emit :X [...]` with no parentheses; done |
 | #19 | Excerpt, bad: a double click read from the 6th byte of a status string (`exs/7guis/cells.atm:178`) | closed: the author said yes (2026-11-26) to `status` as a table of booleans; `e.status.double` |
-| #20 | Excerpt, idiomatic: `e.status.double` (`exs/7guis/cells.atm:178`) | shown to the author 2026-11-26 |
+| #20 | Excerpt, idiomatic: `e.status.double` (`exs/7guis/cells.atm:178`) | shown to the author 2026-11-26; no explicit answer |
 | #21 | Excerpt, bad: `e.but == 1`, a bare number for the left button | closed: the author said yes (2026-11-26); `e.but` is a tag (`:left`, `:middle`, `:right`), and the buttons of `status` have the same names |
 | #22 | Excerpt: the two rules of the canvas of the circle drawer (`exs/7guis/circles.atm:136`) | closed: rewritten as the author suggested (2026-11-26), the press as a predicate of the loop (`until it.press`) and the exclusive cases in an `ifs` |
 | #23 | Excerpt: the id of a cell kept in an attribute of its control (`exs/7guis/cells.atm:177`) | closed: the author finds it ok; the C version does the same (`IupSetInt`/`IupGetInt` of `CELL`) |

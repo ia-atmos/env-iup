@@ -47,6 +47,18 @@ ifs {
 `loop in n {...}`, not `loop _ in n {...}` (the author, 2026-11-22). A
 `loop _,v in t` that uses the value stays.
 
+### A statement takes its argument with no parentheses (#18)
+
+`emit`, as `await`, `throw`, and `return`, is a statement, not a call.
+
+```
+;; before
+emit(:action [h=but])
+
+;; after
+emit :action [h=but]
+```
+
 ### The idiom of the library is fine (#23)
 
 A datum of the program kept in the control, as IUP does
