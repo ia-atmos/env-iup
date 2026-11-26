@@ -15,8 +15,8 @@ task Counter () {
 test {
     spawn Counter()
     print("visible", iup.get(dlg, "VISIBLE"))
-    emit(:action [h=but])
-    emit(:action [h=but])
+    emit :action [h=but]
+    emit :action [h=but]
     print("count", iup.get(txt, "VALUE"))
     await 100ms                 ;; the time passes
     print("100ms")

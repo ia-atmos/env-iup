@@ -17,7 +17,7 @@ atmos.env([
     mode = [primary=true],
     step = func (mode) {
         set steps = steps + 1
-        emit(`:number 1000 / A_CLOCK_US`)        ;; 1ms
+        emit `:number 1000 / A_CLOCK_US`          ;; 1ms
         steps > 100000                          ;; a bound, never reached
     },
     quit = func () {

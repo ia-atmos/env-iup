@@ -222,7 +222,7 @@ by emitting the events of IUP itself, with no script:
 ```
 test {
     spawn Counter()
-    emit(:action [h=but])
+    emit :action [h=but]
     print(iup.get(txt, "VALUE"))
     await 100ms                 ;; the time passes as usual
 }
